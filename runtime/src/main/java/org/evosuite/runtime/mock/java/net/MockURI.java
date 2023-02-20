@@ -48,8 +48,9 @@ public class MockURI implements StaticReplacementMock {
      * cannot be used :(
      */
     public static URL toURL(URI uri) throws MalformedURLException {
-        if (!uri.isAbsolute())
-            throw new MockIllegalArgumentException("URI is not absolute");
+    	// TRANSFER: why does the mock url need to be absolute???
+//        if (!uri.isAbsolute())
+//            throw new MockIllegalArgumentException("URI is not absolute");
         return MockURL.URL(uri.toString());
     }
 

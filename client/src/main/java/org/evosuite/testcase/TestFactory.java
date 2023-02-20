@@ -34,6 +34,8 @@ import org.apache.commons.lang3.ClassUtils;
 import org.evosuite.Properties;
 import org.evosuite.TestGenerationContext;
 import org.evosuite.TimeController;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
+import org.evosuite.coverage.line.ReachabilitySpecUnderInferenceUtils;
 import org.evosuite.ga.ConstructionFailedException;
 import org.evosuite.runtime.mock.MockList;
 import org.evosuite.runtime.util.AtMostOnceLogger;
@@ -286,7 +288,8 @@ public class TestFactory {
 					                                               Arrays.asList(constructor.getConstructor().getParameters()),
 					                                               position,
 					                                               recursionDepth + 1,
-					                                               true, false, true);
+					                                               true, false, true,
+					                                               constructor.getDeclaringClass().getName());
 			int newLength = test.size();
 			position += (newLength - length);
 
@@ -403,6 +406,9 @@ public class TestFactory {
 
 		Statement st = new AssignmentStatement(test, f, var);
 		VariableReference ret = test.addStatement(st, position);
+		
+		logger.debug("Adding field assignment  " + st.getCode());
+		
 		// logger.info("FIeld assignment: " + st.getCode());
 		assert (test.isValid());
 		return ret;
@@ -503,6 +509,10 @@ public class TestFactory {
 					                       Arrays.asList(method.getMethod().getParameters()),
 					                       position, recursionDepth + 1, true, false, true);
 
+			if (ReachabilityCoverageFactory.targetCallerMethod.contains(method.getName())) {
+//				logger.warn("matched target caller method. params are " + parameters);
+				
+			}
 		} catch (ConstructionFailedException e) {
 			// TODO: Re-insert in new test cluster
 			// TestCluster.getInstance().checkDependencies(method);
@@ -2214,6 +2224,12 @@ public class TestFactory {
 			} else if (o.isMethod()) {
 				GenericMethod m = (GenericMethod) o;
 				logger.debug("Adding method call {}", m.getName());
+				if (m.toString().contains("readValue(java.lang.String,java.lang.Class")) {
+					logger.warn("m is " + m.toString());
+				} 
+				if (m.toString().contains("oap.json.Binder.unmarshal(java.lang.Class<T>,java.lang.String)")) {
+					logger.warn("m is " + m.toString());
+				} 
 				name = m.getName();
 
 				if (!m.isStatic()) {
@@ -2365,6 +2381,13 @@ public class TestFactory {
 		return rs.insertStatement(test, lastPosition);
 	}
 
+	public List<VariableReference> satisfyParameters(TestCase test, VariableReference callee, List<Type> parameterTypes,
+			List<Parameter> parameterList, int position, int recursionDepth, boolean allowNull,
+			boolean excludeCalleeGenerators, boolean canReuseExistingVariables) throws ConstructionFailedException {
+		return satisfyParameters(test, callee,  parameterTypes,
+			parameterList, position, recursionDepth, allowNull,
+			excludeCalleeGenerators, canReuseExistingVariables, callee != null ? callee.getClassName() : "");
+	}
 	/**
 	 * Satisfies a list of parameters by reusing or creating variables. Returns a list of references
 	 * to the objects or values . If there are no parameters, simply returns the empty list. If
@@ -2380,10 +2403,32 @@ public class TestFactory {
 	 */
 	public List<VariableReference> satisfyParameters(TestCase test, VariableReference callee, List<Type> parameterTypes,
 			List<Parameter> parameterList, int position, int recursionDepth, boolean allowNull,
-			boolean excludeCalleeGenerators, boolean canReuseExistingVariables) throws ConstructionFailedException {
+			boolean excludeCalleeGenerators, boolean canReuseExistingVariables, String declaringClassName) throws ConstructionFailedException {
 
 		if (callee == null && excludeCalleeGenerators) {
 			throw new IllegalArgumentException("Exclude generators on null callee");
+		}
+		
+		// for the callee method that is targetted (ReachabilityCoverage stuff)
+		// we already know its true parameter type.
+		// we favour creation of objects that match the classes seen in observed test cases
+		
+		
+		if (declaringClassName.equals(ReachabilityCoverageFactory.targetCallerClazz) && Randomness.nextDouble() >= 0.2) {
+			List<Type> newParameterTypes = new ArrayList<Type>();
+			for (int i = 0; i < parameterTypes.size(); i++) {
+				if (!ReachabilitySpecUnderInferenceUtils.favourConcreteTypes.containsKey(parameterTypes.get(i).toString())) {
+					newParameterTypes.add(parameterTypes.get(i));
+					continue;
+				}
+				
+				Class<?> newType = ReachabilitySpecUnderInferenceUtils.favourConcreteTypes.get(parameterTypes.get(i).toString());
+				
+				AtMostOnceLogger.warn(logger, "prefering type " + newType + " over " + parameterTypes.get(i));
+				newParameterTypes.add(newType);
+			}
+			
+			parameterTypes = newParameterTypes;
 		}
 
 		List<VariableReference> parameters = new ArrayList<>();
@@ -2444,6 +2489,7 @@ public class TestFactory {
 
 			int currentLength = test.size();
 			position += currentLength - previousLength;
+			
 		}
 		logger.debug("Satisfied {} parameters", parameterTypes.size());
 		return parameters;

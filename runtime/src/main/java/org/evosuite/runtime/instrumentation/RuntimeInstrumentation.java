@@ -78,7 +78,11 @@ public class RuntimeInstrumentation {
 
 	public static boolean checkIfCanInstrument(String className) {
 		for (String s : ExcludedClasses.getPackagesShouldNotBeInstrumented()) {
-			if (className.startsWith(s)) {
+			// special case junit.rules
+			// special case javax.validation too
+			// and org.xml.sax.ContentHandler
+			// and javax.io.ImageReader
+			if (className.startsWith(s) && !className.startsWith("org.junit.rules.T") && !className.startsWith("javax.io.ImageReader")) { //&& !className.startsWith("org.xml.sax.ContentHandler")) {// && !className.startsWith("javax.validation")) {
 				return false;
 			}
 		}
@@ -92,7 +96,20 @@ public class RuntimeInstrumentation {
 			// Instrumenting clover coverage instrumentation helper classes breaks clover
 			return false;
 		}
+		
+		if (className.contains("net.minidev.json.writer.MapperRemapped")) { // evosuite seems to hang when carving of this class is involved. weird
+			return false;
+		}
+		
+//		if (className.contains("net.minidev.json.reader.JsonWriter")) { // evosuite seems to hang when carving of this class is involved. weird
+//			return false;
+//		}
+		
 
+//		if (className.contains("DocumentFactory") || className.contains("org.dom4j")) { // funkiness with dom4j
+//			return false;
+//		}
+		
 		return true;
 	}
 

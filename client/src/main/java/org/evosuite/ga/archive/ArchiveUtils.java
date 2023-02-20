@@ -31,6 +31,7 @@ import org.evosuite.coverage.ibranch.IBranchTestFitness;
 import org.evosuite.coverage.io.input.InputCoverageTestFitness;
 import org.evosuite.coverage.io.output.OutputCoverageTestFitness;
 import org.evosuite.coverage.line.LineCoverageTestFitness;
+import org.evosuite.coverage.line.ReachabilityCoverageTestFitness;
 import org.evosuite.coverage.method.MethodCoverageTestFitness;
 import org.evosuite.coverage.method.MethodNoExceptionCoverageTestFitness;
 import org.evosuite.coverage.method.MethodTraceCoverageTestFitness;
@@ -149,11 +150,17 @@ public final class ArchiveUtils {
             return true;
           }
           break;
+        case REACHABILITY:
+          if (goal instanceof ReachabilityCoverageTestFitness) {
+        	  return true;
+          }
+          break;
         case LINE:
           if (goal instanceof LineCoverageTestFitness) {
             return true;
           }
           break;
+       
         case ONLYLINE:
           if (goal instanceof LineCoverageTestFitness) {
             return true;

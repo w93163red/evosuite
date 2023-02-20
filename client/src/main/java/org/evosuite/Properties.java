@@ -141,7 +141,7 @@ public class Properties {
 
 	@Parameter(key = "null_probability", group = "Test Creation", description = "Probability to use null instead of constructing an object")
 	@DoubleValue(min = 0.0, max = 1.0)
-	public static double NULL_PROBABILITY = 0.1;
+	public static double NULL_PROBABILITY = 0.025;
 
 	@Parameter(key = "object_reuse_probability", group = "Test Creation", description = "Probability to reuse an existing reference, if available")
 	@DoubleValue(min = 0.0, max = 1.0)
@@ -153,11 +153,11 @@ public class Properties {
 
 	@Parameter(key = "primitive_pool", group = "Test Creation", description = "Probability to use a primitive from the pool rather than a random value")
 	@DoubleValue(min = 0.0, max = 1.0)
-	public static double PRIMITIVE_POOL = 0.5;
+	public static double PRIMITIVE_POOL = 0.95; // TRANSFER: changed this such that there is only 0.05 chance of using a random value. Random values are almost not useful for us..
 
 	@Parameter(key = "dynamic_pool", group = "Test Creation", description = "Probability to use a primitive from the dynamic pool rather than a random value")
 	@DoubleValue(min = 0.0, max = 1.0)
-	public static double DYNAMIC_POOL = 0.5;
+	public static double DYNAMIC_POOL = 0.1;
 
 	@Parameter(key = "variable_pool", group = "Test Creation", description = "Set probability of a constant based on the number of occurrences")
 	@DoubleValue(min = 0.0, max = 1.0)
@@ -213,7 +213,7 @@ public class Properties {
 	public static int MAX_DELTA = 20;
 
 	@Parameter(key = "random_perturbation", group = "Test Creation", description = "Probability to replace a primitive with a random new value rather than adding a delta")
-	public static double RANDOM_PERTURBATION = 0.2;
+	public static double RANDOM_PERTURBATION = 0.9; // TRANSFER: perturbations (especially on strings) are frustrating!!
 
 	@Parameter(key = "max_array", group = "Test Creation", description = "Maximum length of randomly generated arrays")
 	public static int MAX_ARRAY = 10;
@@ -349,7 +349,7 @@ public class Properties {
     public static boolean MAP_ELITES_IGNORE_FEATURES = false;
 	
 	@Parameter(key = "algorithm", group = "Search Algorithm", description = "Search algorithm")
-	public static Algorithm ALGORITHM = Algorithm.MONOTONIC_GA;
+	public static Algorithm ALGORITHM = Algorithm.DYNAMOSA;
 
 	/** Different models of neighbourhoods in the Cellular GA **/
 	public enum CGA_Models{
@@ -958,7 +958,7 @@ public class Properties {
 	public static String JUNIT = "";
 
 	@Parameter(key = "log_goals", group = "Output", description = "Create a CSV file for each individual evolution")
-	public static boolean LOG_GOALS = false;
+	public static boolean LOG_GOALS = true;
 
 	@Parameter(key = "log.level", group = "Output", description = "Verbosity level of logger")
 	public static String LOG_LEVEL = null;
@@ -967,17 +967,17 @@ public class Properties {
 	public static String LOG_TARGET = null;
 
 	@Parameter(key = "minimize", group = "Output", description = "Minimize test suite after generation")
-	public static boolean MINIMIZE = true;
+	public static boolean MINIMIZE = false;
 
 	@Parameter(key = "minimize_second_pass", group = "Output", description = "Perform a second minimization pass as the first one may retain subsumed tests")
-	public static boolean MINIMIZE_SECOND_PASS = true;
+	public static boolean MINIMIZE_SECOND_PASS = false;
 
     @Parameter(key = "minimize_sort", group = "Output", description = "Sort goals before Minimization")
-    public static boolean MINIMIZE_SORT = true;
+    public static boolean MINIMIZE_SORT = false;
 
 
 	@Parameter(key = "minimize_skip_coincidental", group = "Output", description = "Minimize test suite after generation")
-	public static boolean MINIMIZE_SKIP_COINCIDENTAL = true;
+	public static boolean MINIMIZE_SKIP_COINCIDENTAL = false;
 
 	@Parameter(key = "minimize_old", group = "Output", description = "Minimize test suite using old algorithm")
 	@Deprecated
@@ -990,7 +990,7 @@ public class Properties {
 	public static boolean LM_STRINGS = false;
 
 	@Parameter(key = "minimize_strings", group="Output", description = "Try to minimise strings by deleting non-printables. The parameter minimize_values must also be true,")
-	public static boolean MINIMIZE_STRINGS = true;
+	public static boolean MINIMIZE_STRINGS = false;
 
 	@Parameter(key = "lm_src", description = "Text file for the language model.")
 	public static String LM_SRC = "ukwac_char_lm";
@@ -1026,7 +1026,7 @@ public class Properties {
 	public static boolean SAVE_ALL_DATA = true;
 
 	@Parameter(key = "print_goals", group = "Output", description = "Print out goals of class under test")
-	public static boolean PRINT_GOALS = false;
+	public static boolean PRINT_GOALS = true;
 
 	@Parameter(key = "all_goals_file", group = "Output", description = "File to which the list of all goals is written")
 	public static String ALL_GOALS_FILE = REPORT_DIR + File.separator + "all.goals";
@@ -1050,7 +1050,7 @@ public class Properties {
 	public static String COVERED_GOALS_FILE = REPORT_DIR + File.separator + "covered.goals";
 
 	@Parameter(key = "assertions", group = "Output", description = "Create assertions")
-	public static boolean ASSERTIONS = true;
+	public static boolean ASSERTIONS = false; // TRANSFER TODO: we only need assertions at the end
 
 	public enum AssertionStrategy {
 		ALL, MUTATION, UNIT
@@ -1434,13 +1434,21 @@ public class Properties {
 		EXCEPTION, DEFUSE, ALLDEFS, BRANCH, CBRANCH, STRONGMUTATION, WEAKMUTATION,
 		MUTATION, STATEMENT, RHO, AMBIGUITY, IBRANCH, READABILITY,
         ONLYBRANCH, ONLYMUTATION, METHODTRACE, METHOD, METHODNOEXCEPTION, LINE, ONLYLINE, OUTPUT, INPUT,
-        TRYCATCH
+        TRYCATCH,
+        
+        REACHABILITY
 	}
 
     @Parameter(key = "criterion", group = "Runtime", description = "Coverage criterion. Can define more than one criterion by using a ':' separated list")
     public static Criterion[] CRITERION = new Criterion[] {
             //these are basic criteria that should be always on by default
-            Criterion.LINE, Criterion.BRANCH, Criterion.EXCEPTION, Criterion.WEAKMUTATION, Criterion.OUTPUT, Criterion.METHOD, Criterion.METHODNOEXCEPTION, Criterion.CBRANCH  };
+    		// TRANSFER: 
+//            Criterion.LINE, Criterion.BRANCH, Criterion.EXCEPTION, Criterion.WEAKMUTATION, Criterion.OUTPUT, Criterion.METHOD, Criterion.METHODNOEXCEPTION, Criterion.CBRANCH
+    		Criterion.LINE, Criterion.BRANCH, 
+//    		Criterion.OUTPUT,
+//    		Criterion.METHOD, 
+    		Criterion.REACHABILITY
+            };
 
 
     /** Cache target class */

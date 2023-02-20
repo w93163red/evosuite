@@ -55,6 +55,11 @@ public class Inspector implements Serializable {
 		method = m;
 		method.setAccessible(true);
 	}
+	
+	//no args ctor for gson?
+	public Inspector() {
+		
+	}
 
 	/**
 	 * <p>
@@ -98,7 +103,7 @@ public class Inspector implements Serializable {
 
 		return ret;
 	}
-
+	
 	/**
 	 * <p>
 	 * Getter for the field <code>method</code>.
@@ -130,6 +135,10 @@ public class Inspector implements Serializable {
 	 */
 	public String getClassName() {
 		return clazz.getName();
+	}
+	
+	public Class getClazz() {
+		return clazz;
 	}
 
 	/**
@@ -174,6 +183,11 @@ public class Inspector implements Serializable {
 		} else if (!method.equals(other.method))
 			return false;
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "Inspector [clazz:" + clazz + ", method:" + method + "]";
 	}
 
 	private void writeObject(ObjectOutputStream oos) throws IOException {

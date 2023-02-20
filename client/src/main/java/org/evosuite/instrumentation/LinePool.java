@@ -26,6 +26,12 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
+import org.evosuite.runtime.util.AtMostOnceLogger;
+import org.evosuite.utils.LoggingUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Keep track of the lines of code in a class
  *
@@ -33,6 +39,8 @@ import java.util.Set;
  */
 public class LinePool {
 
+	private static final Logger logger = LoggerFactory.getLogger(LinePool.class);
+	
 	/** Map class names to methods to sets of line numbers */
 	private static Map<String, Map<String, Set<Integer>>> lineMap = new LinkedHashMap<>();
 

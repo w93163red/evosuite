@@ -21,7 +21,10 @@
 package org.evosuite.seeding;
 
 import org.evosuite.Properties;
+import org.evosuite.ga.metaheuristics.mosa.structural.BranchFitnessGraph;
 import org.evosuite.utils.Randomness;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Gordon Fraser
@@ -29,6 +32,8 @@ import org.evosuite.utils.Randomness;
  */
 public class ConstantPoolManager {
 
+	private static final Logger logger = LoggerFactory.getLogger(ConstantPoolManager.class);
+	
 	private static ConstantPoolManager instance = new ConstantPoolManager();
 
 	private ConstantPool[] pools;
@@ -59,9 +64,12 @@ public class ConstantPoolManager {
 	private void initDefaultProbabilities() {
 		probabilities = new double[pools.length];
 //		double p = 1d / probabilities.length;
-		double p = (1d - Properties.DYNAMIC_POOL) / (probabilities.length - 1);
+//		double p = (1d - Properties.DYNAMIC_POOL) / (probabilities.length - 1);
+		// TRANSFER notes: TRANSFER requires instrumentation of many things. this causes the non-sut pool to be extremely crowded, as compared to EvoSuite.
+		// TRANSFER notes: we grant the SUT pool 2 times the chance.
+		double p = (1d - Properties.DYNAMIC_POOL) / (probabilities.length);
 		for (int i = 0; i < probabilities.length; i++) {
-			probabilities[i] = p;
+			probabilities[i] = i == 0 ? 2 * p : p;
 		}
 		probabilities[DYNAMIC_POOL_INDEX] = Properties.DYNAMIC_POOL;
 		normalizeProbabilities();
@@ -89,11 +97,30 @@ public class ConstantPoolManager {
 	 */
 
 	public void addSUTConstant(Object value) {
+		if (value instanceof String) {
+			if (((String)value).contains("quine")) {
+				logger.warn("adding string containing `quine` to SUT constant pool");
+			}
+//			try {
+//				throw new RuntimeException("adding new constant=" + value);
+//			} catch (Exception e) {
+//				logger.warn("new constant " + value, e);
+//			}
+		}
+		
 		pools[0].add(value);
 	}
 
 	public void addNonSUTConstant(Object value) {
-		pools[1].add(value);
+		if (value instanceof String) {
+			if (((String)value).contains("quine")) {
+				logger.warn("adding string containing `quine` to non SUT constant pool");
+			}
+		}
+		
+		if (Randomness.nextDouble() < 0.001) { // TRANSFER: prevent non-SUT constants from dominating the random string scene. We inspect a lot more files so there are MANY constants
+			pools[1].add(value);
+		}
 	}
 
 	public void addDynamicConstant(Object value) {
@@ -107,6 +134,7 @@ public class ConstantPoolManager {
 			k += probabilities[i];
 			if (p < k) {
 				return pools[i];
+				
 			}
 		}
 		/*

@@ -25,6 +25,7 @@ import org.evosuite.runtime.util.AtMostOnceLogger;
 import org.evosuite.testcase.TestChromosome;
 import org.evosuite.testcase.TestFitnessFunction;
 import org.evosuite.testcase.execution.ExecutionResult;
+import org.evosuite.testsuite.TransferTestSuiteAnalyser;
 import org.evosuite.testsuite.TestSuiteChromosome;
 import org.evosuite.utils.Randomness;
 import org.slf4j.Logger;
@@ -66,7 +67,7 @@ public class CoverageArchive extends Archive {
   @Override
   public void addTarget(TestFitnessFunction target) {
     super.addTarget(target);
-
+    
     if (!this.uncovered.contains(target)) {
       logger.debug("Registering new target '" + target + "'");
       this.uncovered.add(target);
@@ -94,6 +95,7 @@ public class CoverageArchive extends Archive {
 
     TestChromosome currentSolution = this.covered.get(target);
 
+    
     if (currentSolution == null) {
       logger.debug("Solution for non-covered target '" + target + "'");
       isNewCoveredTarget = true;

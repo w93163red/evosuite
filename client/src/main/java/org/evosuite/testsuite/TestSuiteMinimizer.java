@@ -24,6 +24,7 @@ import org.evosuite.TestGenerationContext;
 import org.evosuite.TimeController;
 import org.evosuite.Properties.SecondaryObjective;
 import org.evosuite.coverage.TestFitnessFactory;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.ga.ConstructionFailedException;
 import org.evosuite.junit.CoverageAnalysis;
 import org.evosuite.junit.writer.TestSuiteWriter;
@@ -117,7 +118,7 @@ public class TestSuiteMinimizer {
     }
 
     private void filterJUnitCoveredGoals(List<TestFitnessFunction> goals) {
-        if (Properties.JUNIT.isEmpty())
+        if (Properties.JUNIT.isEmpty() || ReachabilityCoverageFactory.targetCalleeClazz != null) // always disable this if transfer 
             return;
 
         LoggingUtils.getEvoLogger().info("* Determining coverage of existing tests");

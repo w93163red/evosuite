@@ -41,6 +41,7 @@ import org.evosuite.assertion.Assertion;
 import org.evosuite.assertion.InspectorAssertion;
 import org.evosuite.assertion.PrimitiveFieldAssertion;
 import org.evosuite.contracts.ContractViolation;
+import org.evosuite.coverage.line.ReachabilityCoverageTestFitness;
 import org.evosuite.ga.ConstructionFailedException;
 import org.evosuite.runtime.util.Inputs;
 import org.evosuite.setup.TestClusterUtils;
@@ -144,6 +145,14 @@ public class DefaultTestCase implements TestCase, Serializable {
 	/** {@inheritDoc} */
 	@Override
 	public void addCoveredGoal(TestFitnessFunction goal) {
+		if (goal instanceof ReachabilityCoverageTestFitness) {
+			logger.warn("adding reachability to covered goals");
+//			try {
+//				throw new RuntimeException();
+//			} catch (Exception e) {
+			logger.warn("!added reachability goal!");
+//			}
+		}
 		coveredGoals.add(goal);
 		// TODO: somehow adds the same goal more than once (fitnessfunction.equals()?)
 	}
@@ -624,7 +633,11 @@ public class DefaultTestCase implements TestCase, Serializable {
 					value.isArray() == rawClass.isArray()) {
 				variables.add(value);
 			} else {
-				addFields(variables, value, type);
+				try {
+					addFields(variables, value, type);
+				} catch (VerifyError ve) {
+					logger.warn("strange verify error", ve);
+				}
 			}			
 		}
 

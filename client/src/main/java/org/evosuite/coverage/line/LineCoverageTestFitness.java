@@ -54,7 +54,7 @@ public class LineCoverageTestFitness extends TestFitnessFunction {
 	/** Target line */
 	private final String className;
 	private final String methodName;
-	private final Integer line;
+	protected final Integer line;
 
 	protected transient BytecodeInstruction goalInstruction;
 	protected transient List<BranchCoverageTestFitness> branchFitnesses = new ArrayList<>();
@@ -155,14 +155,31 @@ public class LineCoverageTestFitness extends TestFitnessFunction {
 	 */
 	@Override
 	public double getFitness(TestChromosome individual, ExecutionResult result) {
+		
+		if (ReachabilityCoverageFactory.abalation_turnOffOtherGoals) {
+			return 1.0;
+		}
 		double fitness = 1.0;
 
 		// Deactivate coverage archive while measuring fitness, since branchcoverage fitness
 		// evaluating will attempt to claim coverage for it in the archive
 		boolean archive = Properties.TEST_ARCHIVE;
 		Properties.TEST_ARCHIVE = false;
-		if (result.getTrace().getCoveredLines().contains(this.line)) {
+		
+		boolean debug = false; // this.getClassName().contains("Closeable");
+		
+		if (hasCalleeMethodAsTestStatement(result)) {
+			fitness = 1.0;
+			if (debug) {
+				logger.warn("rejecting " + this + " since hasCalleeMethodAsTestStatement");
+			}
+		}
+		else if (result.getTrace().getCoveredLines().contains(this.line)) {
 			fitness = 0.0;
+			
+			if (debug) {
+				logger.warn("SAT " + this );
+			}
 		} else {
 			double r = Double.MAX_VALUE;
 
@@ -184,6 +201,9 @@ public class LineCoverageTestFitness extends TestFitnessFunction {
 			}
 			
 			fitness = r;
+			if (debug) {
+				logger.warn("get distance " + this + " is fitness=" + fitness);
+			}
 		}
 		Properties.TEST_ARCHIVE = archive;
 		updateIndividual(individual, fitness);

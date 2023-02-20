@@ -146,13 +146,24 @@ public class InspectorManager {
 		if (!Modifier.isPublic(method.getModifiers()))
 			return false;
 
-		if (!method.getReturnType().isPrimitive()
-				&& !method.getReturnType().equals(String.class)
-				&& !method.getReturnType().isEnum()
-				&& !ClassUtils.isPrimitiveWrapper(method.getReturnType())) {
-			return false;
-		}
+//		if (!method.getReturnType().isPrimitive()
+//				&& !method.getReturnType().equals(String.class)
+//				&& !method.getReturnType().equals(byte[].class)
+//				&& !method.getReturnType().isEnum()
+//				&& !ClassUtils.isPrimitiveWrapper(method.getReturnType())) {
+//			return false;
+//		}
 
+		// this should generally be true
+				// but let's just do this for Tika's stuff for the time being
+		// just to see what happens	
+//				if (method.getDeclaringClass().getName().contains("TikaInputStream")) {
+//					logger.warn("see TikaInputStream, method is " + method.getName());
+//					if (method.getName().startsWith("get") && (method.getParameterTypes().length == 0)) { 
+//						return true;
+//					}
+//				}
+				
 		if (method.getReturnType().equals(void.class))
 			return false;
 
@@ -191,6 +202,12 @@ public class InspectorManager {
 				return false;
 			}
 		}
+		
+		
+		
+		// quick hack. toString is fine
+//		if(method.getName().equals("toString"))
+//			return false;
 
 		return true;
 

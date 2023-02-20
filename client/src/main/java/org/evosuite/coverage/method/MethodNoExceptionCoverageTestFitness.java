@@ -93,6 +93,7 @@ public class MethodNoExceptionCoverageTestFitness extends TestFitnessFunction {
 	public double getFitness(TestChromosome individual, ExecutionResult result) {
 		double fitness = 1.0;
 
+		
 		List<Integer> exceptionPositions = new ArrayList<>();
 		if (Properties.BREAK_ON_EXCEPTION) {
 			// we consider only the first thrown exception
@@ -124,6 +125,7 @@ public class MethodNoExceptionCoverageTestFitness extends TestFitnessFunction {
 			}
 		}
 
+	
 		updateIndividual(individual, fitness);
 
 		if (fitness == 0.0) {
@@ -134,6 +136,7 @@ public class MethodNoExceptionCoverageTestFitness extends TestFitnessFunction {
 			Archive.getArchiveInstance().updateArchive(this, individual, fitness);
 		}
 
+//		logger.warn("methodNoException :" +  toString() + " fitness= " + fitness);
 		return fitness;
 	}
 

@@ -423,7 +423,8 @@ public class JUnitAnalyzer {
 					}
 				}
 				logger.error(buffer.toString());
-				return null;
+//				return null;
+				// TRANSFER notes: still write to file even if it does not compile, we need it for debugging
 			}
 
 			return generated;

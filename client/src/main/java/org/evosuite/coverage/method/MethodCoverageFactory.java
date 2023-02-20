@@ -21,6 +21,7 @@ package org.evosuite.coverage.method;
 
 import org.evosuite.Properties;
 import org.evosuite.coverage.MethodNameMatcher;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.graphs.cfg.BytecodeInstruction;
 import org.evosuite.setup.TestUsageChecker;
 import org.evosuite.testsuite.AbstractFitnessFactory;
@@ -72,6 +73,21 @@ public class MethodCoverageFactory extends
 		        goals.addAll(getCoverageGoals(innerClass, innerClassName));
 	        }
         }
+		
+		try {
+			goals.addAll(getCoverageGoals(Class.forName(ReachabilityCoverageFactory.targetCalleeClazzAsNormalName), ReachabilityCoverageFactory.targetCalleeClazzAsNormalName));
+		} catch (ClassNotFoundException e) {
+			logger.error("failed to add callee class names", e);
+		}
+		
+		for (String additionalClass : ReachabilityCoverageFactory.additionalClasses) {
+	 		try {
+				goals.addAll(getCoverageGoals(Class.forName(additionalClass), additionalClass));
+			} catch (ClassNotFoundException e) {
+				logger.error("failed to add additionalClass class names = " + additionalClass, e);
+			}
+		}
+		
 		goalComputationTime = System.currentTimeMillis() - start;
 		return goals;
 	}

@@ -24,11 +24,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.evosuite.Properties;
 import org.evosuite.TestGenerationContext;
 import org.evosuite.coverage.MethodNameMatcher;
 import org.evosuite.graphs.cfg.BytecodeInstruction;
 import org.evosuite.instrumentation.LinePool;
 import org.evosuite.testsuite.AbstractFitnessFactory;
+import org.evosuite.testsuite.TransferTestSuiteAnalyser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,7 +97,21 @@ public class LineCoverageFactory extends
 				}
 			}
 		}
+		
+		if (!TransferTestSuiteAnalyser.goalsOfJunit.isEmpty()) {
+			// filter the goals we know are not covered
+			goals.removeIf(goal -> 
+				!TransferTestSuiteAnalyser.goalsOfJunit.contains(goal) 
+				&& goal.getClassName().equals(ReachabilityCoverageFactory.targetCalleeClazzAsNormalName));
+		}
+		// otherwise, we still do not know what is covered by the vuln-test, just return all goals for analysis. 
+		
 		goalComputationTime = System.currentTimeMillis() - start;
+		logger.warn("The following line goals are constructed:");
+		for (LineCoverageTestFitness goal : goals) {
+			logger.warn(goal.toString());
+		}
+		logger.warn("END linegoals");
 		return goals;
 	}
 

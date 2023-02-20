@@ -56,6 +56,22 @@ public class JUnitRunner {
 	}
 
 	/**
+	 * run junit for a list of methods.
+	 * @param methodNames
+	 */
+	public void run(List<String> methodNames) {
+		
+		for (String methodName : methodNames) {
+			Request request = Request.method(this.junitClass, methodName);
+	
+			JUnitCore junit = new JUnitCore();
+			junit.addListener(new JUnitRunListener(this));
+			junit.run(request);
+		}
+	}
+
+	
+	/**
 	 * 
 	 * @param testResult
 	 */

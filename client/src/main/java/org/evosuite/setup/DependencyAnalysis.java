@@ -27,6 +27,8 @@ import org.evosuite.TestGenerationContext;
 import org.evosuite.classpath.ResourceList;
 import org.evosuite.coverage.branch.BranchPool;
 import org.evosuite.coverage.dataflow.DefUsePool;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
+import org.evosuite.coverage.line.ReachingSpec;
 import org.evosuite.coverage.mutation.MutationPool;
 import org.evosuite.graphs.cfg.CFGMethodAdapter;
 import org.evosuite.instrumentation.LinePool;
@@ -81,19 +83,24 @@ public class DependencyAnalysis {
 	}
 
 	public static void initCallGraph(String className) {
-		logger.debug("Calculate call tree");
+		logger.warn("Calculate call tree of " + className);
 		CallGraph callGraph = CallGraphGenerator.analyze(className);
 		callGraphs.put(className, callGraph);
 		// include all the project classes in the inheritance tree and in the callgraph.
 		if (ArrayUtil.contains(Properties.CRITERION, Criterion.IBRANCH)
-				|| Properties.INSTRUMENT_CONTEXT) {
+				|| Properties.INSTRUMENT_CONTEXT
+//				|| ReachabilityCoverageFactory.targetCalleeClazz != null // not sure if needed?
+				) {
 
 			for (String classn : inheritanceTree.getAllClasses()) {
 				if (isTargetProject(classn)) {
+					logger.warn("analyzer other classes: " + classn);
 					CallGraphGenerator.analyzeOtherClasses(callGraph, classn);
 				}
 			}
 		}
+		
+
 
 		// TODO: Need to make sure that all classes in calltree are instrumented
 		logger.debug("Update call tree with calls to overridden methods");
@@ -249,6 +256,20 @@ public class DependencyAnalysis {
 		if (isTargetClassName(className))
 			return true;
 
+		// TRANSFER: if it is the target, then instrument it
+//		logger.warn("comparing className=" + className + " to targetCalledClazz=" +  ReachabilityCoverageFactory.targetCalledClazz);
+//		try {
+//			throw new RuntimeException("dummy");
+//		}catch (Exception e) {
+//			logger.error("gotta see where", e);
+//		}
+		if (className.equals(ReachabilityCoverageFactory.targetCalleeClazzAsNormalName)) {
+			logger.warn("found targetCalledClazz");
+			return true;
+		}
+		
+//		if (ReachabilityCoverageFactory.targetCalleeClazzAsNormalName.contains("javax.validation"))
+		
 		if (inheritanceTree == null) {
 			return false;
 		}
@@ -266,6 +287,20 @@ public class DependencyAnalysis {
 			CallGraph callGraph = callGraphs.get(Properties.TARGET_CLASS);
 			if (callGraph != null && callGraph.isCalledClass(className)) {
 				return true;
+			}
+		}
+		if (ReachabilityCoverageFactory.targetCalleeClazz != null) {
+			CallGraph callGraph = callGraphs.get(Properties.TARGET_CLASS);
+			if (callGraph != null && callGraph.isCalledClass(className) 
+					&& className.equals(ReachabilityCoverageFactory.targetCalleeClazz)
+					) {
+				return true;
+			}
+			
+			if (!ReachabilityCoverageFactory.additionalClasses.isEmpty()) {
+				if (ReachabilityCoverageFactory.additionalClasses.contains(className)) {
+					return true;
+				}
 			}
 		}
 
@@ -300,6 +335,32 @@ public class DependencyAnalysis {
 				return true;
 			}
 		}
+		if (ReachabilityCoverageFactory.targetCalleeClazz != null) {
+			CallGraph callGraph = callGraphs.get(Properties.TARGET_CLASS);
+			
+			
+			if (callGraph != null && callGraph.isCalledMethod(className, methodName) 
+					){
+			
+//				logger.warn("shouldInstrument? methodName= " + methodName 
+//						+ "  is called in CG? = " + (callGraph != null && callGraph.isCalledMethod(className, methodName)));
+				
+				
+				if(Properties.INSTRUMENT_LIBRARIES || DependencyAnalysis.isTargetProject(className))
+				return true;
+			}
+			if (ReachabilityCoverageFactory.targetCalleeClazzAsNormalName.equals(className)) {
+				return true;
+			}
+		
+			if (!ReachabilityCoverageFactory.additionalClasses.isEmpty()) {
+				if (ReachabilityCoverageFactory.additionalClasses.contains(className)) {
+					return true;
+				}
+			}
+		}
+		
+		
 
 		return false;
 	}

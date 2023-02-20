@@ -77,13 +77,32 @@ public class BranchFitnessGraph implements Serializable {
 					continue;
 				}
 				
+				
 				BranchCoverageGoal goal = new BranchCoverageGoal(newB, true, newB.getClassName(), newB.getMethodName());
 				BranchCoverageTestFitness newFitness = new BranchCoverageTestFitness(goal);
-				graph.addEdge(newFitness, fitness);
+//				logger.warn("branch fitness: goal1: " + newB.getClassName() + " method=" + newB.getMethodName());
+//				logger.warn("branch fitness=" + newFitness);
+		
+				if (!graph.containsVertex(newFitness)) {
+//					graph.addVertex(newFitness);
+				} else {
+					graph.addEdge(newFitness, fitness);	
+				}
+//				graph.addEdge(newFitness, fitness);
 
+				
 				BranchCoverageGoal goal2 = new BranchCoverageGoal(newB, false, newB.getClassName(), newB.getMethodName());
+//				logger.warn("branch fitness: goal2: " + newB.getClassName() + " method=" + newB.getMethodName());
 				BranchCoverageTestFitness newfitness2 = new BranchCoverageTestFitness(goal2);
-				graph.addEdge(newfitness2, fitness);
+//				logger.warn("branch fitness=" + newfitness2);
+				
+				if (!graph.containsVertex(newfitness2)) {
+//					graph.addVertex(newfitness2);
+					
+				} else {
+					graph.addEdge(newfitness2, fitness);
+				}
+//				graph.addEdge(newfitness2, fitness);
 			}
 		}
 	}

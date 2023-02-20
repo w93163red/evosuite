@@ -123,6 +123,7 @@ public class MethodCoverageTestFitness extends TestFitnessFunction {
             Archive.getArchiveInstance().updateArchive(this, individual, fitness);
         }
 
+//        logger.warn("method :" +  toString() + " fitness= " + fitness);
         return fitness;
     }
 

@@ -82,13 +82,15 @@ public class ObjectPoolManager extends ObjectPool {
 			CarvingManager manager = CarvingManager.getInstance();
 			for(Class<?> targetClass : manager.getClassesWithTests()) {
 				List<TestCase> tests = manager.getTestsForClass(targetClass);
-				logger.info("Carved tests for {}: {}", targetClass.getName(), tests.size());
+				logger.warn("Carved tests for {}: {}", targetClass.getName(), tests.size());
 				GenericClass cut = new GenericClass(targetClass);
 				for(TestCase test : tests) {
 					this.addSequence(cut, test);
+					logger.warn("carved test for " + targetClass.getName() + ":");
+					logger.warn(test.toCode());
 				}
 			}
-			logger.info("Pool after carving: "+this.getNumberOfClasses()+"/"+this.getNumberOfSequences());
+			logger.warn("Pool after carving: "+this.getNumberOfClasses()+"/"+this.getNumberOfSequences());
 		}
 	}
 		

@@ -226,7 +226,12 @@ public final class Capturer {
 			logger.info("Capturer has been stopped successfully");
 
 			FieldRegistry.clear();
-			logger.debug("Done");
+			logger.warn("stopCapture Done");
+			try {
+				throw new RuntimeException("stop Capture done");
+			} catch (Exception e) {
+				logger.error("stop capture done", e);
+			}
 			return log;
 		}
 
@@ -249,17 +254,22 @@ public final class Capturer {
 				//(currentLog) {
 				setCapturing(false);
 
-				if (logger.isDebugEnabled()) {
-					logger.debug("Method call captured:  captureId={} receiver={} type={} method={} methodDesc={} params={}",
+//				if (logger.isDebugEnabled()) {
+					logger.info("Method call captured:  captureId={} receiver={} type={} method={} methodDesc={} params={}",
 							captureId, System.identityHashCode(receiver),
 							receiver.getClass().getName(), methodName,
 							methodDesc, Arrays.toString(methodParams));
-				}
+//				}
 				
 				currentLog.log(captureId, receiver, methodName, methodDesc, methodParams);
 				if(TimeController.getInstance().isThereStillTimeInThisPhase())
 					setCapturing(true);
 				//}
+			} else {
+				logger.info("Method call not captured:  captureId={} receiver={} type={} method={} methodDesc={} params={}",
+						captureId, System.identityHashCode(receiver),
+						receiver.getClass().getName(), methodName,
+						methodDesc, Arrays.toString(methodParams));
 			}
 		} catch(Throwable t) {
 			// TODO: Handle properly?

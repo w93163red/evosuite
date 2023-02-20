@@ -20,6 +20,7 @@
 package org.evosuite.testcase.execution;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,19 +30,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.evosuite.Properties;
 import org.evosuite.TestGenerationContext;
 import org.evosuite.Properties.Criterion;
+import org.evosuite.coverage.FitnessFunctions;
 import org.evosuite.coverage.branch.Branch;
 import org.evosuite.coverage.branch.BranchPool;
 import org.evosuite.coverage.dataflow.DefUse;
 import org.evosuite.coverage.dataflow.DefUsePool;
 import org.evosuite.coverage.dataflow.Definition;
 import org.evosuite.coverage.dataflow.Use;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
+import org.evosuite.coverage.line.ReachabilitySpecUnderInferenceUtils;
+import org.evosuite.coverage.line.ReachingSpec;
+import org.evosuite.runtime.util.AtMostOnceLogger;
 import org.evosuite.setup.CallContext;
 import org.evosuite.statistics.RuntimeVariable;
 import org.evosuite.utils.ArrayUtil;
+import org.evosuite.utils.LoggingUtils;
 import org.objectweb.asm.Opcodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -279,6 +287,16 @@ public class ExecutionTraceImpl implements ExecutionTrace, Cloneable {
 	public static Map<RuntimeVariable, Set<Integer>> bytecodeInstructionCoveredFalse = Collections
 			.synchronizedMap(new HashMap<>());
 
+	// track arguments passed to the target method.
+	// the list of size n, where n is the number of times the target function is invoked
+	// each of the n lists has length = number of arguments of target method + 1
+	public List<List<Object>> argumentsPassedToTargetFunction = new ArrayList<>();
+	public ReachingSpec spec;
+	public double similarity;
+	
+	
+	
+	
 	/**
 	 * <p>
 	 * Constructor for ExecutionTraceImpl.
@@ -473,7 +491,10 @@ public class ExecutionTraceImpl implements ExecutionTrace, Cloneable {
 
 		if (!disableContext && (Properties.INSTRUMENT_CONTEXT || Properties.INSTRUMENT_METHOD_CALLS
 				|| ArrayUtil.contains(Properties.CRITERION, Criterion.IBRANCH)
-				|| ArrayUtil.contains(Properties.CRITERION, Criterion.CBRANCH))) {
+				|| ArrayUtil.contains(Properties.CRITERION, Criterion.CBRANCH)
+				|| ReachabilityCoverageFactory.targetCalleeMethod != null
+				)
+				) {
 			updateBranchContextMaps(branch, true_distance, false_distance);
 		}
 
@@ -691,7 +712,7 @@ public class ExecutionTraceImpl implements ExecutionTrace, Cloneable {
 	 * Add a new method call to stack
 	 */
 	@Override
-	public void enteredMethod(String className, String methodName, Object caller) {
+	public synchronized void enteredMethod(String className, String methodName, Object caller) {
 		if (traceCoverage) {
 			String id = className + "." + methodName;
 			if (!coveredMethods.containsKey(id)) {
@@ -728,7 +749,7 @@ public class ExecutionTraceImpl implements ExecutionTrace, Cloneable {
 
 			if (!disableContext
 					&& (Properties.INSTRUMENT_CONTEXT || ArrayUtil.contains(Properties.CRITERION, Criterion.IBRANCH)
-							|| ArrayUtil.contains(Properties.CRITERION, Criterion.CBRANCH))) {
+							|| ArrayUtil.contains(Properties.CRITERION, Criterion.CBRANCH)) || ReachabilityCoverageFactory.targetCalleeMethod != null) {
 				updateMethodContextMaps(className, methodName, caller);
 			}
 		}
@@ -805,7 +826,9 @@ public class ExecutionTraceImpl implements ExecutionTrace, Cloneable {
 	 * Pop last method call from stack
 	 */
 	@Override
-	public void exitMethod(String classname, String methodname) {
+	public synchronized void exitMethod(String classname, String methodname) {
+		
+		compareAgainstSpecIfCheckingAtEnd(classname, methodname);
 		if (!classname.isEmpty() && !methodname.isEmpty()) {
 			// if(traceCalls) {
 				if (!stack.isEmpty() && !(stack.peek().methodName.equals(methodname))) {
@@ -819,17 +842,36 @@ public class ExecutionTraceImpl implements ExecutionTrace, Cloneable {
 						stack.pop();
 					}
 				} else {
-					finishedCalls.add(stack.pop());
+					if (!stack.isEmpty()) {
+						finishedCalls.add(stack.pop());
+					}
 				}
 			//}
+		}	
+	}
+
+	@Override
+	public void compareAgainstSpecIfCheckingAtEnd(String classname, String methodname) {
+
+		if (classname.equals(ReachabilityCoverageFactory.targetCalleeClazzAsNormalName) 
+				&& ReachabilityCoverageFactory.targetCalleeMethod.contains(ReachabilityCoverageFactory.descriptorToActualName(methodname))) {
+			
+			if (!ReachabilityCoverageFactory.checkAtStart) {
+
+				for (List<Object> argumentSet : argumentsPassedToTargetFunction) {
+					compareSpecWithArguments(argumentSet, ReachabilityCoverageFactory.isRecording);
+				}
+			}
+			
 		}
 	}
 
 	/** {@inheritDoc} */
 	@Override
 	public synchronized void finishCalls() {
-		logger.debug("At the end, we have " + stack.size() + " calls left on stack");
+//		logger.warn("At the end, we have " + stack.size() + " calls left on stack, isEmpty=" + stack.isEmpty());
 		while (!stack.isEmpty()) {
+//			logger.warn("At the end, after checking stack not empty, we have " + stack.size() + " calls left on stack");
 			finishedCalls.add(stack.pop());
 		}
 	}
@@ -1356,7 +1398,7 @@ public class ExecutionTraceImpl implements ExecutionTrace, Cloneable {
 	 * Add line to currently active method call
 	 */
 	@Override
-	public void linePassed(String className, String methodName, int line) {
+	public synchronized void linePassed(String className, String methodName, int line) {
 		if (traceCalls) {
 			if (stack.isEmpty()) {
 				logger.info("Method stack is empty: " + className + "." + methodName + " - l" + line); // TODO
@@ -1379,13 +1421,13 @@ public class ExecutionTraceImpl implements ExecutionTrace, Cloneable {
 								&& !stack.peek().methodName.equals(""));
 					} else {
 
-						logger.warn("Popping method " + stack.peek().methodName + " because we were looking for "
+						logger.info("Popping method " + stack.peek().methodName + " because we were looking for "
 								+ methodName);
-						logger.warn("Current stack: " + stack);
+						logger.info("Current stack: " + stack);
 						finishedCalls.add(stack.pop());
 					}
 					if (stack.isEmpty()) {
-						logger.warn("Method stack is empty: " + className + "." + methodName + " - l" + line); // TODO
+						logger.info("Method stack is empty: " + className + "." + methodName + " - l" + line); // TODO
 																												// switch
 																												// back
 						empty = true;
@@ -1818,5 +1860,72 @@ public class ExecutionTraceImpl implements ExecutionTrace, Cloneable {
 	@Override
 	public List<String> getInitializedClasses() {
 		return this.initializedClasses;
+	}
+
+	@Override
+	public void enteredMethodWithArgument(Object... value) {
+//		LoggingUtils.logWarnAtMostOnce(logger, "received enteredMethodWithArgument with arguments len=" +value.length);
+		
+		
+		
+		
+
+		List<Object> args = new ArrayList<>();
+		argumentsPassedToTargetFunction.add(args);
+		
+		for (int i = ReachabilityCoverageFactory.targetCalleeMethodIsCtor ? 1 : 0; i < value.length; i++) {
+			args.add(value[i]);
+		}
+
+		ReachabilityCoverageFactory.matchedOutput = false;
+		
+		if (ReachabilityCoverageFactory.checkAtStart) {
+			compareSpecWithArguments(args, ReachabilityCoverageFactory.isRecording);
+		} 
+				
+	}
+
+	private void compareSpecWithArguments(List<Object> args, boolean recording) {
+		
+		if (recording) {
+			logger.warn("recording program state");
+			if (spec == null) {
+				spec = new ReachingSpec();
+				ReachabilitySpecUnderInferenceUtils.recordObjects(spec, args);
+			}
+			
+		} else {
+			double bestSimilarity = 0;
+			for (ReachingSpec specUnderAnalysis : ReachabilityCoverageFactory.reachingSpec.values()) {
+				
+				
+				double oneSimilarity = ReachabilitySpecUnderInferenceUtils.compareObjects(specUnderAnalysis, args);
+//				logger.warn("one similarity = " + oneSimilarity);
+				if (oneSimilarity > bestSimilarity) {
+					bestSimilarity = oneSimilarity;
+				}
+				
+			}
+			similarity = Math.max(similarity, bestSimilarity);
+		}
+	}
+	
+	
+	
+	
+	
+	@Override
+	public List<List<Object>> getArgumentsPassedToTargetFunction() {
+		return argumentsPassedToTargetFunction;
+	}
+	
+	@Override
+	public ReachingSpec getSpecOfArgumentsToTargetFunction() {
+		return spec;
+	}
+	
+	@Override
+	public double similarityOfActualToSpec() {
+		return similarity;
 	}
 }

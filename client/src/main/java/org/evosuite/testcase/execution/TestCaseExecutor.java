@@ -20,6 +20,7 @@
 package org.evosuite.testcase.execution;
 
 import java.io.PrintStream;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -135,7 +136,29 @@ public class TestCaseExecutor implements ThreadFactory {
 		try {
 			TestCaseExecutor executor = getInstance();
 			logger.debug("Executing test");
+//			logger.warn("Executing test=" + test);
 			result = executor.execute(test);
+			try {
+				logger.warn("\toutcome is (executed #stmt=" + result.getExecutedStatements() 
+				+ ", #exceptions=" + result.getNumberOfThrownExceptions()
+				+ ",  first exceptions=" + result.getFirstPositionOfThrownException()
+				+ ", exceptions are " + result.explicitExceptions
+				+ ", exception values are " + result.getAllThrownExceptions()
+	//			+ ", method calls=" + result.trace.getMethodCalls()
+				+ ", covered lines= " + result.trace.getCoveredLines());
+				if (!result.getAllThrownExceptions().isEmpty()) {
+					Collection<Throwable> exn = result.getAllThrownExceptions();
+					Throwable one = exn.iterator().next();
+					logger.error("thrown exn is", one);
+					if (one.getCause() != null) {
+						logger.error("thrown exn is caused by ", one.getCause());
+					}
+				}
+			} catch (Exception e) {
+				// TRANSFER: ignore weird stuff happening during logging
+				// e.g. if it loads some stupid class/ requires some ResourceBundle stuff
+				logger.warn("error during logging outcomes=", e);
+			}
 
 			MaxStatementsStoppingCondition.statementsExecuted(result.getExecutedStatements());
 
@@ -480,6 +503,13 @@ public class TestCaseExecutor implements ThreadFactory {
 			ExecutionResult result = new ExecutionResult(tc, null);
 			result.setThrownExceptions(callable.getExceptionsThrown());
 			result.reportNewThrownException(tc.size(), new TestCaseExecutor.TimeoutExceeded());
+			
+			if (tc.toCode().contains("quine")) {
+				logger.warn("timeout case:");
+				logger.warn("timed out test is :");
+				logger.warn(tc.toCode());
+			}
+			
 			result.setTrace(ExecutionTracer.getExecutionTracer().getTrace());
 			ExecutionTracer.getExecutionTracer().clear();
 			ExecutionTracer.setKillSwitch(false);

@@ -22,6 +22,7 @@ package org.evosuite.testcase.execution;
 import org.evosuite.assertion.OutputTrace;
 import org.evosuite.coverage.io.input.InputCoverageGoal;
 import org.evosuite.coverage.io.output.OutputCoverageGoal;
+import org.evosuite.coverage.line.ReachingSpec;
 import org.evosuite.coverage.mutation.Mutation;
 import org.evosuite.ga.metaheuristics.mapelites.FeatureVector;
 import org.evosuite.testcase.TestCase;
@@ -92,6 +93,13 @@ public class ExecutionResult implements Cloneable {
     private Map<Integer, Set<InputCoverageGoal>> inputGoals = new LinkedHashMap<>();
 
     private Map<Integer, Set<OutputCoverageGoal>> outputGoals = new LinkedHashMap<>();
+    
+    private ReachingSpec callerConcreteExecution;
+    private ReachingSpec calleeConcreteExecution;
+    
+    
+    private boolean callerSpecificationSatisfied;
+    private boolean calleeSpecificationSatisfied;
 
 	// experiment .. tried to remember intermediately calculated ControlFlowDistances .. no real speed up
 	//	public Map<Branch, ControlFlowDistance> intermediateDistances;
@@ -450,6 +458,23 @@ public class ExecutionResult implements Cloneable {
 	public void setInputGoals(Map<Integer, Set<InputCoverageGoal>> coveredGoals) {
 		inputGoals.putAll(coveredGoals);
 	}
+	
+	public void setConcreteExecution(ReachingSpec concrete, boolean isCaller) {
+		if (isCaller) {
+			this.callerConcreteExecution = concrete;
+		} else {
+			this.calleeConcreteExecution = concrete;
+		}
+	}
+	
+	public void setSpecificationSatisfied(boolean satisfied, boolean isCallerSpec) {
+		if (isCallerSpec) {
+			this.callerSpecificationSatisfied = satisfied;
+		} else {
+			this.calleeSpecificationSatisfied = satisfied;
+		}
+		
+	}
 
 	public void setOutputGoals(Map<Integer, Set<OutputCoverageGoal>> coveredGoals) {
         outputGoals.putAll(coveredGoals);
@@ -461,6 +486,24 @@ public class ExecutionResult implements Cloneable {
 
 	public Map<Integer, Set<OutputCoverageGoal>> getOutputGoals() {
 		return outputGoals;
+	}
+	
+	public ReachingSpec getCallerConcreteExecution() {
+		// note: can be null
+		return callerConcreteExecution;
+	}
+	
+	public ReachingSpec getCalleeConcreteExecution() {
+		// note: can be null
+		return calleeConcreteExecution;
+	}
+	
+	public boolean getCallerSpecificationSatisfied() {
+		return this.callerSpecificationSatisfied;
+	}
+	
+	public boolean getCalleeSpecificationSatisfied() {
+		return this.calleeSpecificationSatisfied;
 	}
 
 	/**

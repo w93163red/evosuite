@@ -57,6 +57,9 @@ import org.evosuite.coverage.line.LineCoverageFactory;
 import org.evosuite.coverage.line.LineCoverageSuiteFitness;
 import org.evosuite.coverage.line.LineCoverageTestFitness;
 import org.evosuite.coverage.line.OnlyLineCoverageSuiteFitness;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
+import org.evosuite.coverage.line.ReachabilityCoverageSuiteFitness;
+import org.evosuite.coverage.line.ReachabilityCoverageTestFitness;
 import org.evosuite.coverage.method.MethodCoverageFactory;
 import org.evosuite.coverage.method.MethodCoverageSuiteFitness;
 import org.evosuite.coverage.method.MethodCoverageTestFitness;
@@ -154,6 +157,8 @@ public class FitnessFunctions {
 			return new InputCoverageSuiteFitness();
 		case TRYCATCH:
 			return new TryCatchCoverageSuiteFitness();
+		case REACHABILITY:
+			return new ReachabilityCoverageSuiteFitness();
 		default:
 			logger.warn("No TestSuiteFitnessFunction defined for {}; using default one (BranchCoverageSuiteFitness)", Arrays.toString(Properties.CRITERION));
 			return new BranchCoverageSuiteFitness();
@@ -215,6 +220,8 @@ public class FitnessFunctions {
 			return new InputCoverageFactory();
 		case TRYCATCH:
 			return new TryCatchCoverageFactory();
+		case REACHABILITY:
+			return new ReachabilityCoverageFactory();
 		default:
 			logger.warn("No TestFitnessFactory defined for " + crit
 			        + " using default one (BranchCoverageFactory)");
@@ -277,6 +284,8 @@ public class FitnessFunctions {
 				return InputCoverageTestFitness.class;
 		case TRYCATCH:
 				return TryCatchCoverageTestFitness.class;
+		case REACHABILITY:
+					return ReachabilityCoverageTestFitness.class;
 		default:
 				throw new RuntimeException("No criterion defined for " + criterion.name());
 		}

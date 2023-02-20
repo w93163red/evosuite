@@ -20,9 +20,12 @@
 package org.evosuite.seeding;
 
 import org.evosuite.Properties;
+import org.evosuite.testcase.factories.FixedLengthTestChromosomeFactory;
 import org.evosuite.utils.DefaultRandomAccessQueue;
 import org.evosuite.utils.RandomAccessQueue;
 import org.objectweb.asm.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Gordon Fraser
@@ -30,6 +33,8 @@ import org.objectweb.asm.Type;
  */
 public class DynamicConstantPool implements ConstantPool {
 
+	protected static final Logger logger = LoggerFactory.getLogger(DynamicConstantPool.class);
+	
 	private final RandomAccessQueue<String> stringPool = new DefaultRandomAccessQueue<>();
 
 	private final RandomAccessQueue<Type> typePool = new DefaultRandomAccessQueue<>();
@@ -122,7 +127,14 @@ public class DynamicConstantPool implements ConstantPool {
 				return;
 			stringPool.restrictedAdd(string);
 		} else if (object instanceof Type) {
+			logger.warn("adding to type pool" + object);
+			try {
+				throw new RuntimeException("adding to type pool = " + object);
+			} catch (RuntimeException e) {
+				logger.error("type pool", e);
+			}
 			typePool.restrictedAdd((Type) object);
+			
 		}
 
 		else if (object instanceof Integer) {

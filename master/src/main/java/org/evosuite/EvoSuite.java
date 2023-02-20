@@ -342,10 +342,12 @@ public class EvoSuite {
                 return ListParameters.execute();
             }
 
-            if (line.hasOption(Continuous.NAME)) {
-                return Continuous.execute(options, javaOpts, line);
-            }
+//            if (line.hasOption(Continuous.NAME)) {
+//                return Continuous.execute(options, javaOpts, line);
+//            }
 
+            LoggingUtils.getEvoLogger().warn("javaOpts: "
+                    + javaOpts);
             return TestGeneration.executeTestGeneration(options, javaOpts, line);
 
         } catch (ParseException exp) {

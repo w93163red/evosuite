@@ -22,10 +22,13 @@ package org.evosuite.coverage.branch;
 import org.evosuite.Properties;
 import org.evosuite.TestGenerationContext;
 import org.evosuite.coverage.MethodNameMatcher;
+import org.evosuite.coverage.line.LineCoverageTestFitness;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.graphs.cfg.BytecodeInstruction;
 import org.evosuite.graphs.cfg.ControlDependency;
 import org.evosuite.setup.DependencyAnalysis;
 import org.evosuite.testsuite.AbstractFitnessFactory;
+import org.evosuite.testsuite.TransferTestSuiteAnalyser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,6 +78,11 @@ public class BranchCoverageFactory extends
 					logger.info("Method " + methodName + " does not match criteria. ");
 					continue;
 				}
+				if (!ReachabilityCoverageFactory.classToFunctionAlongCallGraph.isEmpty() && ReachabilityCoverageFactory.classToFunctionAlongCallGraph.containsKey(className) && !ReachabilityCoverageFactory.classToFunctionAlongCallGraph.get(className).contains(methodName)) {
+//					logger.warn("Method " + methodName + " not contained on call graph. ");
+//					logger.warn("call graph contains " + ReachabilityCoverageFactory.classToFunctionAlongCallGraph.get(className).iterator().next());
+					continue;
+				}
 
 				for (Branch b : BranchPool.getInstance(TestGenerationContext.getInstance().getClassLoaderForSUT()).retrieveBranchesInMethod(className,
 						methodName)) {
@@ -85,6 +93,21 @@ public class BranchCoverageFactory extends
 				}
 			}
 		}
+		
+		if (!TransferTestSuiteAnalyser.goalsOfJunit.isEmpty()) {
+			// filter the goals we know are not covered
+			goals.removeIf(goal -> 
+				!TransferTestSuiteAnalyser.goalsOfJunit.contains(goal) 
+				&& goal.getClassName().equals(ReachabilityCoverageFactory.targetCalleeClazzAsNormalName));
+		}
+		// otherwise, we still do not know what is covered by the vuln-test, just return all goals for analysis. 
+		
+		logger.warn("The following branch goals are constructed:");
+		for (BranchCoverageTestFitness goal : goals) {
+			logger.warn(goal.toString());
+		}
+		logger.warn("END branch goals");
+		
 		goalComputationTime = System.currentTimeMillis() - start;
 		return goals;
 	}

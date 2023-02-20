@@ -243,6 +243,7 @@ public class LineCoverageSuiteFitness extends TestSuiteFitnessFunction {
 
 				// The order of CDs may be nondeterminstic
 				// TODO: A better solution would be to make the CD order deterministic rather than sorting here
+				logger.info("initializeControlDependencies: className=" + className);
 				List<ControlDependency> cds = new ArrayList<>(bi.getControlDependencies());
 				Collections.sort(cds);
 				for(ControlDependency cd : cds) {

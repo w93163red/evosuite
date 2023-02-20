@@ -26,6 +26,7 @@ import org.evosuite.PackageInfo;
 import org.evosuite.Properties;
 import org.evosuite.assertion.CheapPurityAnalyzer;
 import org.evosuite.classpath.ResourceList;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.graphs.cfg.CFGClassAdapter;
 import org.evosuite.instrumentation.error.ErrorConditionClassAdapter;
 import org.evosuite.instrumentation.testability.BooleanTestabilityTransformation;
@@ -44,11 +45,13 @@ import org.evosuite.runtime.util.ComputeClassWriter;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.SerialVersionUIDAdder;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.util.TraceClassVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * The bytecode transformer - transforms bytecode depending on package and
@@ -249,11 +252,14 @@ public class BytecodeInstrumentation {
 		}
 
 		// Testability Transformations
-		if (classNameWithDots.startsWith(Properties.PROJECT_PREFIX)
+		if (
+				Properties.TT && (
+				classNameWithDots.startsWith(Properties.PROJECT_PREFIX)
 				|| (!Properties.TARGET_CLASS_PREFIX.isEmpty()
 						&& classNameWithDots.startsWith(Properties.TARGET_CLASS_PREFIX))
-				|| shouldTransform(classNameWithDots)) {
+				|| shouldTransform(classNameWithDots))) {
 
+//			logger.warn("doing testability transformation?");
 			ClassNode cn = new AnnotatedClassNode();
 			reader.accept(cn, readFlags);
 			logger.info("Starting transformation of " + className);
@@ -293,6 +299,7 @@ public class BytecodeInstrumentation {
 		} else {
 			reader.accept(cv, readFlags);
 		}
+
 
 		return writer.toByteArray();
 	}

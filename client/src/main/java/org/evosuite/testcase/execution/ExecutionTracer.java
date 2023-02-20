@@ -24,7 +24,10 @@ import java.util.Map;
 import org.evosuite.coverage.dataflow.DefUsePool;
 import org.evosuite.coverage.dataflow.Definition;
 import org.evosuite.coverage.dataflow.Use;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.instrumentation.testability.BooleanHelper;
+import org.evosuite.runtime.mock.java.lang.MockThrowable;
+import org.evosuite.runtime.util.AtMostOnceLogger;
 import org.evosuite.seeding.ConstantPoolManager;
 import org.objectweb.asm.Opcodes;
 import org.slf4j.Logger;
@@ -274,6 +277,25 @@ public class ExecutionTracer {
 		//logger.trace("Entering method " + classname + "." + methodname);
 		tracer.trace.enteredMethod(classname, methodname, caller);
 	}
+	
+	public static void enteredMethodWithArgument(Object... values)
+	        throws TestCaseExecutor.TimeoutExceeded {
+
+//		logger.warn("Entering enteredMethodWithArgument ");
+		ExecutionTracer tracer = getExecutionTracer();
+
+		if (tracer.disabled)
+			return;
+
+		if (isThreadNeqCurrentThread())
+			return;
+
+		checkTimeout();
+
+
+		tracer.trace.enteredMethodWithArgument(values);
+	}
+
 
 	/**
 	 * Called by instrumented code whenever a return values is produced
@@ -315,6 +337,7 @@ public class ExecutionTracer {
 			return;
 
 		if (value == null) {
+			logger.warn("Return value in ExecutionTracer: " + "class=" + className + " method=" + methodName + " val is null" );
 			returnValue(0, className, methodName);
 			return;
 		}
@@ -332,7 +355,7 @@ public class ExecutionTracer {
 		int index = 0;
 		int position = 0;
 		boolean found = false;
-		boolean deleteAddresses = true;
+		boolean deleteAddresses = false;
 		char c = ' ';
 		// quite fast method to detect memory addresses in Strings.
 		while ((position = tmp.indexOf("@", index)) > 0) {
@@ -349,7 +372,19 @@ public class ExecutionTracer {
 				tmp.delete(position + 1, index);
 			}
 		}
-
+		logger.warn("Return value in ExecutionTracer: " + "class=" + className + " method=" + methodName + " val=" + value);
+		if (ReachabilityCoverageFactory.isRecording) {
+			ReachabilityCoverageFactory.recordedOutput = value;
+			ReachabilityCoverageFactory.hasRecordedOutput = true; 
+			logger.warn("recorded matchedOutput=" + value.toString());
+		} else {
+			if (ReachabilityCoverageFactory.hasRecordedOutput) {
+				if (ReachabilityCoverageFactory.recordedOutput.toString().equals(value.toString())) {
+					ReachabilityCoverageFactory.matchedOutput = true;
+					logger.warn("setting matchedOutput to true by comparing retval");
+				}
+			}
+		}
 		returnValue(tmp.toString().hashCode(), className, methodName);
 	}
 
@@ -371,6 +406,19 @@ public class ExecutionTracer {
 
 		tracer.trace.exitMethod(classname, methodname);
 		// logger.trace("Left method " + classname + "." + methodname);
+	}
+	
+	public static void leftMethodByException(String classname, String methodname) {
+		ExecutionTracer tracer = getExecutionTracer();
+		if (tracer.disabled)
+			return;
+
+		if (isThreadNeqCurrentThread())
+			return;
+
+//		tracer.trace.exitMethod(classname, methodname);
+		tracer.trace.compareAgainstSpecIfCheckingAtEnd(classname, methodname);
+//		 logger.trace("Left method " + classname + "." + methodname);
 	}
 
 	/**
@@ -832,7 +880,22 @@ public class ExecutionTracer {
 
 		checkTimeout();
 
+		logger.warn("detected thrown exception: " + className + " at method=" + methodName + " exception =" + exception);
+		if (ReachabilityCoverageFactory.isRecording && className.equals(ReachabilityCoverageFactory.targetCalleeClazzAsNormalName)) {
+			logger.warn("setting recordedException " + (Throwable)exception);
+			ReachabilityCoverageFactory.recordedException = (Throwable)exception;
+		}
+	
+		if (exception instanceof org.evosuite.runtime.mock.java.lang.MockThrowable) {
+			MockThrowable casted = (org.evosuite.runtime.mock.java.lang.MockThrowable) exception;
+			if (casted.getCause()!= null) {
+				logger.warn("cause: " + casted.getCause());
+			}
+			logger.error("detected thrown exception=", casted);
+		}
 		tracer.trace.setExplicitException((Throwable) exception);
+		
+//		tracer.trace.compareAgainstSpecIfCheckingAtEnd(className, methodName);
 
 	}
 

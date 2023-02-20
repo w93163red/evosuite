@@ -32,6 +32,7 @@ import org.evosuite.classpath.ResourceList;
 import org.evosuite.coverage.CoverageCriteriaAnalyzer;
 import org.evosuite.coverage.FitnessFunctions;
 import org.evosuite.coverage.TestFitnessFactory;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.coverage.mutation.Mutation;
 import org.evosuite.coverage.mutation.MutationObserver;
 import org.evosuite.coverage.mutation.MutationPool;
@@ -188,10 +189,9 @@ public class CoverageAnalysis {
 	}
 
 	/**
-	 * Return the number of covered goals
-	 * 
+	 * TRANSFER: set the goals covered by the existing test(s) 
 	 * @param testClass
-	 * @param allGoals
+	 * @param allGoals   - all goals (superset of the actual set of goals; doesn't matter if it includes goals from other classes, filter afterwards)
 	 * @return
 	 */
 	public static Set<TestFitnessFunction> getCoveredGoals(Class<?> testClass, List<TestFitnessFunction> allGoals) {
@@ -205,11 +205,22 @@ public class CoverageAnalysis {
 
 		Set<TestFitnessFunction> coveredGoals = new HashSet<>();
 
-		List<JUnitResult> results = executeTests(testClass);
+		List<JUnitResult> results = ReachabilityCoverageFactory.targetCalleeClazz != null ? executeTests(testClass, ReachabilityCoverageFactory.targetCalledClazzTestMethodNames) : executeTests(testClass) ;
 		for (JUnitResult testResult : results) {
 		    executionResult.setTrace(testResult.getExecutionTrace());
             dummy.setLastExecutionResult(executionResult);
 
+            
+            if (testResult.getFailureCount() == 0) {
+            	logger.warn("no failres during test run");
+            }
+            for (JUnitFailure failure : testResult.getFailures()) {
+            	logger.warn("test failure during analysis: " + failure.getExceptionClassName());
+            	logger.warn("test failure during analysis: message= " + failure.getMessage());
+            	logger.warn("test failure during analysis: stacktrace= " + failure.getExceptionStackTrace());
+            	
+            }
+            
             for(TestFitnessFunction goal : allGoals) {
             	if (goal.isCovered(dummy)) {
 					coveredGoals.add(goal);
@@ -486,6 +497,8 @@ public class CoverageAnalysis {
     	boolean[][] coverage_matrix = new boolean[results.size()][goals.size() + 1]; // +1 because we also want to include the test result
     	BitSet covered = new BitSet(goals.size());
 
+    	logger.warn("goals size = " + goals.size());
+    	
         for (int index_test = 0; index_test < results.size(); index_test++) {
         	JUnitResult tR = results.get(index_test);
 
@@ -635,6 +648,32 @@ public class CoverageAnalysis {
             jR.run();
             results.addAll(jR.getTestResults());
         }
+
+		ExecutionTracer.disable();
+
+        LoggingUtils.getEvoLogger().info("* " + ClientProcess.getPrettyPrintIdentifier() + "Executed " + results.size() + " unit "
+                + "test(s)");
+		ClientServices.getInstance().getClientNode().trackOutputVariable(RuntimeVariable.Tests_Executed, results.size());
+
+        return results;
+	}
+	
+	// TRANSFER version: we go with only one test class, multiple methods
+	private static List<JUnitResult> executeTests(Class<?> testClass, List<String> methodNames) {
+
+		ExecutionTracer.enable();
+		ExecutionTracer.setCheckCallerThread(false);
+		ExecutionTracer.getExecutionTracer().clear();
+
+		List<JUnitResult> results = new ArrayList<>();
+     
+    	LoggingUtils.getEvoLogger().info("  Executing " + testClass.getSimpleName() + " methodName=" + methodNames);
+    	// Set the context classloader in case the SUT requests it
+		Thread.currentThread().setContextClassLoader(testClass.getClassLoader());
+        JUnitRunner jR = new JUnitRunner(testClass);
+        jR.run(methodNames);
+        results.addAll(jR.getTestResults());
+    
 
 		ExecutionTracer.disable();
 

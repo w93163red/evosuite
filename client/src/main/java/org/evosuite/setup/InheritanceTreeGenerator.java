@@ -32,6 +32,7 @@ import org.evosuite.PackageInfo;
 import org.evosuite.Properties;
 import org.evosuite.TestGenerationContext;
 import org.evosuite.classpath.ResourceList;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.rmi.ClientServices;
 import org.evosuite.statistics.RuntimeVariable;
 import org.evosuite.utils.LoggingUtils;
@@ -64,7 +65,7 @@ public class InheritanceTreeGenerator {
 	 * @return
 	 */
 	public static InheritanceTree createFromClassPath(List<String> classPath) {
-		if (!Properties.INSTRUMENT_CONTEXT && !Properties.INHERITANCE_FILE.isEmpty()) {
+		if (!Properties.INSTRUMENT_CONTEXT && !Properties.INHERITANCE_FILE.isEmpty() && ReachabilityCoverageFactory.targetCalleeClazz == null) {
 			try {
 				InheritanceTree tree = readInheritanceTree(Properties.INHERITANCE_FILE);
 				LoggingUtils.getEvoLogger().info("* " + ClientProcess.getPrettyPrintIdentifier() +

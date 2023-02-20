@@ -32,6 +32,7 @@ import java.util.Set;
 import org.evosuite.Properties;
 import org.evosuite.TestGenerationContext;
 import org.evosuite.TimeController;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.instrumentation.BytecodeInstrumentation;
 import org.evosuite.setup.TestUsageChecker;
 import org.evosuite.testcarver.capture.CaptureLog;
@@ -73,10 +74,18 @@ public class CarvingRunListener extends RunListener {
 	public void testFinished(Description description) throws Exception {
 		final CaptureLog log = Capturer.stopCapture();
 		if (TimeController.getInstance().isThereStillTimeInThisPhase()) {
-			LoggingUtils.getEvoLogger().info(" - Carving test {}.{}", description.getClassName(), description.getMethodName());
-			this.processLog(description, log);
+//			LoggingUtils.getEvoLogger().info(" - May carve test {}.{}", description.getClassName(), description.getMethodName());
+			if (ReachabilityCoverageFactory.targetCalledClazzTestMethodNames.contains(description.getMethodName())) {
+				
+				LoggingUtils.getEvoLogger().info(" - Carving test {}.{}", description.getClassName(), description.getMethodName());
+				logger.warn("process log");
+				this.processLog(description, log);
+				logger.warn("processed log");
+			}
 		}
+		logger.warn("clearing capturer");
 		Capturer.clear();
+		logger.warn("cleared capturer");
 	}
 
 	private List<Class<?>> getObservedClasses(final CaptureLog log) {
@@ -138,7 +147,7 @@ public class CarvingRunListener extends RunListener {
 		logger.debug("Current log: "+log);
 		List<Class<?>> observedClasses = getObservedClasses(log);
 		for(Class<?> targetClass : observedClasses) {
-			logger.debug("Current observed class: {}", targetClass.getName());
+			logger.warn("Current observed class: {}", targetClass.getName());
 			Class<?>[] targetClasses = new Class<?>[1];
 			targetClasses[0] = targetClass;
 			if(!carvedTests.containsKey(targetClass))
@@ -154,7 +163,7 @@ public class CarvingRunListener extends RunListener {
 				continue;
 			}
 			test.setName(description.getMethodName());
-			logger.info("Carved test of length " + test.size());
+			logger.warn("Carved test of length " + test.size());
 			try {
 				test.changeClassLoader(TestGenerationContext.getInstance().getClassLoaderForSUT());
 				GenericTypeInference inference = new GenericTypeInference();

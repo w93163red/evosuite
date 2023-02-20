@@ -162,11 +162,18 @@ public enum RuntimeVariable {
     MethodNoExceptionFitnessTimeline,
     MethodNoExceptionCoverageTimeline,
     MethodNoExceptionCoverageBitString,
+    
+    /**/
+    Reachability,
 	/** The obtained line coverage */
 	LineCoverage,
     LineFitnessTimeline,
     LineCoverageTimeline,
     LineCoverageBitString,
+    
+    /**/
+    ReachabilityCoverageBitString,
+    
 	/** The obtained output value coverage */
 	OutputCoverage,
     OutputFitnessTimeline,

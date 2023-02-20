@@ -23,6 +23,7 @@ import org.apache.commons.lang3.ClassUtils;
 import org.evosuite.Properties;
 import org.evosuite.annotations.EvoSuiteTest;
 import org.evosuite.coverage.MethodNameMatcher;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.graphs.GraphPool;
 import org.evosuite.runtime.annotation.EvoSuiteExclude;
 import org.evosuite.runtime.classhandling.ClassResetter;
@@ -80,6 +81,7 @@ public class TestUsageChecker {
 			return false;
 		}
 
+		
 		if (c.getDeclaringClass().isMemberClass() && !TestUsageChecker.canUse(c.getDeclaringClass()))
 			return false;
 
@@ -95,6 +97,7 @@ public class TestUsageChecker {
 			return false;
 		}
 
+		
 		if (Modifier.isPublic(c.getModifiers())) {
 			TestClusterUtils.makeAccessible(c);
 			return true;
@@ -104,11 +107,19 @@ public class TestUsageChecker {
             if(!canUse(paramType))
                 return false;
         }
+        
+    	if (ReachabilityCoverageFactory.classToFunctionAlongCallGraph.containsKey(c.getDeclaringClass().getName())
+				&& !ReachabilityCoverageFactory.targetCallerClazz.equals(c.getDeclaringClass().getName())) {
+			logger.warn("reject usage of ctor because name is along callgraph : " + c);
+			return false;
+		}
+
 
         // If default access rights, then check if this class is in the same package as the target class
 		if (!Modifier.isPrivate(c.getModifiers())) {
 			//		        && !Modifier.isProtected(c.getModifiers())) {
 			String packageName = ClassUtils.getPackageName(c.getDeclaringClass());
+		
 			if (packageName.equals(Properties.CLASS_PREFIX)) {
 				TestClusterUtils.makeAccessible(c);
 				return true;
@@ -209,11 +220,11 @@ public class TestUsageChecker {
 
         // TODO: This should be unnecessary if Java reflection works...
         // This is inefficient
-        if(TestClusterUtils.isAnonymousClass(c.getName())) {
-            String message = c + " looks like an anonymous class, ignoring it (although reflection says "+c.isAnonymousClass()+") "+c.getSimpleName();
-            LoggingUtils.logWarnAtMostOnce(logger, message);
-            return false;
-        }
+//        if(TestClusterUtils.isAnonymousClass(c.getName())) {
+//            String message = c + " looks like an anonymous class, ignoring it (although reflection says "+c.isAnonymousClass()+") "+c.getSimpleName();
+//            LoggingUtils.logWarnAtMostOnce(logger, message);
+//            return false;
+//        }
 
         if (Modifier.isPublic(c.getModifiers())) {
             return true;
@@ -308,6 +319,11 @@ public class TestUsageChecker {
     }
 
     public static boolean canUse(Method m, Class<?> ownerClass) {
+    	
+    	boolean debug = false;// ownerClass.getName().contains(ReachabilityCoverageFactory.targetCallerClazz);
+    	if (debug) {
+    		logger.warn("canUse: has target caller 0. " + m);
+    	}
 
         final MethodNameMatcher matcher = new MethodNameMatcher();
         String methodSignature = m.getName() + Type.getMethodDescriptor(m);
@@ -392,6 +408,20 @@ public class TestUsageChecker {
         if (m.getDeclaringClass().equals(java.lang.Thread.class))
             return false;
 
+        if (debug) {
+        	logger.warn("canUse: has target caller 0. " + m);
+    	}
+        if (ReachabilityCoverageFactory.classToFunctionAlongCallGraph.containsKey(m.getDeclaringClass().getName())
+    				&& !ReachabilityCoverageFactory.targetCallerClazz.equals(m.getDeclaringClass().getName())
+    				&& !ReachabilityCoverageFactory.additionalClasses.contains(m.getDeclaringClass().getName())) {
+    			logger.warn("reject usage of class because name is along callgraph : " + m.getDeclaringClass().getName() + " target caller is " + ReachabilityCoverageFactory.targetCallerClazz);
+    			return false;
+    	}
+        
+        if (debug) {
+        	logger.warn("canUse: has target caller 1. " + m);
+    	}
+        
         // Hashcode only if we need to cover it
         if (m.getName().equals("hashCode")) {
 			final Class<?> targetClass = Properties.getTargetClassAndDontInitialise();
@@ -406,7 +436,10 @@ public class TestUsageChecker {
                 }
             }
         }
-
+        if (debug) {
+        	logger.warn("canUse: has target caller 2. " + m);
+    	}
+        
         // Randoop special case: just clumps together a bunch of hashCodes, so skip it
         if (m.getName().equals("deepHashCode")
                 && m.getDeclaringClass().equals(Arrays.class))
@@ -420,6 +453,10 @@ public class TestUsageChecker {
             logger.debug("Ignoring static reset method");
             return false;
         }
+        
+        if (debug) {
+        	logger.warn("canUse: has target caller 3. " + m);
+    	}
 
         if (isForbiddenNonDeterministicCall(m)) {
             return false;
@@ -442,9 +479,13 @@ public class TestUsageChecker {
 		}
 		*/
 
+        
         // If default or
         if (Modifier.isPublic(m.getModifiers())) {
         		TestClusterUtils.makeAccessible(m);
+    		if (debug) {
+            	logger.warn("canUse: has target caller end. " + m);
+        	}
             return true;
         }
 

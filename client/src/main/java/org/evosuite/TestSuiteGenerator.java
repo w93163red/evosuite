@@ -30,6 +30,11 @@ import org.evosuite.coverage.CoverageCriteriaAnalyzer;
 import org.evosuite.coverage.FitnessFunctions;
 import org.evosuite.coverage.TestFitnessFactory;
 import org.evosuite.coverage.dataflow.DefUseCoverageSuiteFitness;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
+import org.evosuite.coverage.line.ReachabilityCoverageTestFitness;
+import org.evosuite.coverage.line.ReachabilitySpecUnderInferenceUtils;
+import org.evosuite.coverage.line.ReachingSpec;
+import org.evosuite.ga.archive.Archive;
 import org.evosuite.ga.metaheuristics.GeneticAlgorithm;
 import org.evosuite.ga.stoppingconditions.StoppingCondition;
 import org.evosuite.junit.JUnitAnalyzer;
@@ -64,7 +69,10 @@ import org.evosuite.utils.generic.GenericMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.text.NumberFormat;
 import java.util.*;
@@ -120,6 +128,10 @@ public class TestSuiteGenerator {
 	public TestGenerationResult generateTestSuite() {
 
 		LoggingUtils.getEvoLogger().info("* " + ClientProcess.getPrettyPrintIdentifier() + "Analyzing classpath: ");
+		
+		// TRANSFER init target class etc...
+		ReachabilitySpecUnderInferenceUtils.init();
+		
 
 		ClientServices.getInstance().getClientNode().changeState(ClientState.INITIALIZATION);
 
@@ -130,6 +142,8 @@ public class TestSuiteGenerator {
 		TestCaseExecutor.initExecutor();
 		try {
 			initializeTargetClass();
+			
+			TransferTestSuiteAnalyser.getJUnitCoveredGoals(getFitnessFactories());
 		} catch (Throwable e) {
 
 			// If the bytecode for a method exceeds 64K, Java will complain
@@ -185,6 +199,9 @@ public class TestSuiteGenerator {
 			// without risking to interfere with class initialisation
 			LoopCounter.getInstance().setActive(true);
 		}
+		
+
+
 
 		/*
 		 * Initialises the object pool with objects carved from SELECTED_JUNIT
@@ -377,6 +394,15 @@ public class TestSuiteGenerator {
 			if (!goals.contains(f)) {
 				testSuite.removeCoveredGoal(f);
 			}
+		}
+		
+		try(BufferedWriter writer = new BufferedWriter(new FileWriter(new File("client_covered_goals.log")))) {
+			for (TestFitnessFunction goal : testSuite.getCoveredGoals()) {
+				writer.append(goal.toString());
+				writer.append("\n");
+			}
+		} catch (IOException e1) {
+			throw new RuntimeException(e1);
 		}
 
 		if (Properties.INLINE) {
@@ -617,6 +643,7 @@ public class TestSuiteGenerator {
 	}
 
 	private TestSuiteChromosome generateTests() {
+		logger.warn("TestSuiteGenerator generateTests");
 		// Make sure target class is loaded at this point
 		TestCluster.getInstance();
 
@@ -633,6 +660,14 @@ public class TestSuiteGenerator {
 			TestCaseExecutor.getInstance().removeObserver(checker);
 		}
 
+		logger.warn("test is " + testSuite); // print it to stdout; in case some evosuite issue stops the test from getting written. We don't care about that, just manually construct the tests based on the logs
+		List<ReachabilityCoverageTestFitness> goals = new ReachabilityCoverageFactory().getCoverageGoals();
+		for (ReachabilityCoverageTestFitness goal : goals) {
+			TestChromosome test = Archive.getArchiveInstance().getSolution(goal);
+			logger.warn("test from archive is " + test);
+			ReachabilitySpecUnderInferenceUtils.writeTestToOutputFile(test.toString());
+		}
+		
 		StatisticsSender.executedAndThenSendIndividualToMaster(testSuite);
 		TestSuiteGeneratorHelper.getBytecodeStatistics();
 
@@ -646,6 +681,8 @@ public class TestSuiteGenerator {
 		 * = new ParameterizedTestCase(test); }
 		 */
 
+		
+		
 		return testSuite;
 	}
 

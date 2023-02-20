@@ -20,6 +20,8 @@
 package org.evosuite.instrumentation;
 
 import org.evosuite.PackageInfo;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
+import org.evosuite.coverage.line.ReachabilitySpecUnderInferenceUtils;
 import org.evosuite.testcase.execution.ExecutionTracer;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -66,6 +68,33 @@ public class ReturnValueAdapter extends MethodVisitor {
 	/** {@inheritDoc} */
 	@Override
 	public void visitInsn(int opcode) {
+		
+if (ReachabilityCoverageFactory.targetCalleeMethod == null ) {
+			
+			// try to init again. maybe we forgot to call init.
+			ReachabilitySpecUnderInferenceUtils.init();
+			
+			
+		}
+		
+
+	
+		
+		
+//		int numberOfArgumentsOfCalleeMethod = ReachabilitySpecUnderInferenceUtils.calleeSpecification == null ? 0 :
+//			ReachabilitySpecUnderInferenceUtils.calleeSpecification.argBoolInspectors.size();
+//		
+//		int numberOfArgumentsOfCurrentMethod = countChar(this.desc.split("\\)")[0], ';');
+//		
+		if (
+				ReachabilityCoverageFactory.targetCalleeMethod != null 
+				&& ReachabilityCoverageFactory.targetCalleeMethod.contains(ReachabilityCoverageFactory.descriptorToActualName(fullMethodName)) 
+//				|| ReachabilityCoverageFactory.targetCalleeMethod.contains("")
+				
+				) {
+			
+			logger.warn("Return value adaptor: matching. methodName=" + fullMethodName);
+			
 		if (!methodName.equals("<clinit>")) {
 			switch (opcode) {
 			case Opcodes.IRETURN:
@@ -90,6 +119,8 @@ public class ReturnValueAdapter extends MethodVisitor {
 			default:
 				break;
 			}
+		}
+		
 		}
 		super.visitInsn(opcode);
 

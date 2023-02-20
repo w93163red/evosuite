@@ -23,6 +23,7 @@ package org.evosuite.testcase.execution;
 import java.util.*;
 
 import org.evosuite.coverage.dataflow.DefUse;
+import org.evosuite.coverage.line.ReachingSpec;
 import org.evosuite.setup.CallContext;
 import org.evosuite.testcase.execution.ExecutionTraceImpl.BranchEval;
 
@@ -619,4 +620,16 @@ public interface ExecutionTrace {
 	 * @return
 	 */
     List<String> getInitializedClasses();
+
+	void enteredMethodWithArgument(Object... value);
+
+	List<List<Object>> getArgumentsPassedToTargetFunction();
+
+	ReachingSpec getSpecOfArgumentsToTargetFunction();
+
+	double similarityOfActualToSpec();
+
+	void compareAgainstSpecIfCheckingAtEnd(String classname, String methodname);
+
+//	void exitMethod();
 }

@@ -139,9 +139,15 @@ public final class CaptureLogAnalyzer implements ICaptureLogAnalyzer
 				logger.debug("Analyzing record in position {}", currentRecord);
 
 				try {
+					// TRANSFER: try to trick evosuite into using the entire method to generate an object
+//					int end = findEndOfMethod(log, currentRecord, currentOID);
+//					oidExchange = this.restoreCodeFromLastPosTo(log, generator, currentOID, end, blackList);
+					// TRANSFER: end
+					
 					oidExchange = this.restoreCodeFromLastPosTo(log, generator, currentOID, currentRecord + 1, blackList);
 				} catch(Throwable t) {
-					logger.debug("Error: "+t);
+					logger.warn("Error: "+t);
+					logger.error("error stacktrace:", t);
 					for(StackTraceElement elem : t.getStackTrace()) {
 						logger.debug(elem.toString());
 					}
@@ -409,6 +415,8 @@ public final class CaptureLogAnalyzer implements ICaptureLogAnalyzer
 			returnValue    = returnValueObj.equals(CaptureLog.RETURN_TYPE_VOID) ? -1 : (Integer) returnValueObj;
 			logger.debug("Checking: "+currentRecord+": "+log.getTypeName(currentOID) +" to generate "+log.getTypeName(oid));
 
+			logger.debug(">>> current type= " + log.getTypeName(currentOID));
+			
 			if(oid == currentOID ||	returnValue == oid) {
 				logger.debug("Current record is currentOID {} or returnvalue", currentOID);
 

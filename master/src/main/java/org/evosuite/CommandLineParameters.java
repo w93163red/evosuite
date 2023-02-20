@@ -128,6 +128,7 @@ public class CommandLineParameters {
 		parallel.setArgs(3);
 		parallel.setArgName("n i x");
 
+		Option enablePreview = new Option("enable_preview", false, "enable-preview for experimental Java features?");
 
 		@SuppressWarnings("static-access")
 		Option property = OptionBuilder.withArgName("property=value").hasArgs(2).withValueSeparator().withDescription("use value for given property").create("D");
@@ -160,6 +161,7 @@ public class CommandLineParameters {
 		options.addOption(heapDump);
 		options.addOption(startedByCtg);
 		options.addOption(parallel);
+		options.addOption(enablePreview);
 
 		return options;
 	}
@@ -264,6 +266,10 @@ public class CommandLineParameters {
 
 		if (line.hasOption("heapdump")) {
 			javaOpts.add("-XX:+HeapDumpOnOutOfMemoryError");
+		}
+		
+		if (line.hasOption("enable_preview")) {
+			javaOpts.add("--enable-preview");
 		}
 	}
 }

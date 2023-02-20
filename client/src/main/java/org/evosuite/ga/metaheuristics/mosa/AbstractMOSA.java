@@ -35,6 +35,7 @@ import org.evosuite.testcase.TestFitnessFunction;
 import org.evosuite.testcase.secondaryobjectives.TestCaseSecondaryObjective;
 import org.evosuite.testcase.statements.*;
 import org.evosuite.testcase.variable.VariableReference;
+import org.evosuite.testsuite.TransferTestSuiteAnalyser;
 import org.evosuite.testsuite.TestSuiteChromosome;
 import org.evosuite.testsuite.TestSuiteFitnessFunction;
 import org.evosuite.utils.ArrayUtil;
@@ -109,6 +110,7 @@ public abstract class AbstractMOSA extends GeneticAlgorithm<TestChromosome> {
 
 	@Override
 	public void addFitnessFunction(final FitnessFunction<TestChromosome> function) {
+
 		if (function instanceof TestFitnessFunction) {
 			fitnessFunctions.add((TestFitnessFunction) function);
 		} else {
@@ -198,6 +200,21 @@ public abstract class AbstractMOSA extends GeneticAlgorithm<TestChromosome> {
 			}
 		}
 		logger.info("Number of offsprings = {}", offspringPopulation.size());
+		
+		// TRANSFER: filter away tests that are without the caller method
+		for (Iterator<TestChromosome> testIter = offspringPopulation.iterator(); testIter.hasNext(); ) {
+			 TestChromosome test = testIter.next();
+			 boolean hasCaller = TestFitnessFunction.hasCallerMethodAsTestStatement(test);
+			 if (!hasCaller) {
+				 testIter.remove();
+				 continue;
+			 }
+			 boolean hasCallee = TestFitnessFunction.hasCalleeMethodAsTestStatement(test.getTestCase());
+			 if (hasCallee) {
+				 testIter.remove();
+				 continue;
+			 }
+		}
 		return offspringPopulation;
 	}
 
@@ -483,14 +500,21 @@ public abstract class AbstractMOSA extends GeneticAlgorithm<TestChromosome> {
 	 */
 	@Override
 	protected void calculateFitness(TestChromosome c) {
-		this.fitnessFunctions.forEach(fitnessFunction -> fitnessFunction.getFitness(c));
-
-		// if one of the coverage criterion is Criterion.EXCEPTION, then we have to analyse the results
-		// of the execution to look for generated exceptions
-		if (ArrayUtil.contains(Properties.CRITERION, Properties.Criterion.EXCEPTION)) {
-			ExceptionCoverageSuiteFitness.calculateExceptionInfo(
-					Collections.singletonList(c.getLastExecutionResult()),
-					new HashMap<>(), new HashMap<>(), new HashMap<>(), new ExceptionCoverageSuiteFitness());
+		boolean hasCaller = TestFitnessFunction.hasCallerMethodAsTestStatement(c);
+		if (!hasCaller) {
+			// don't waste time running the fitness functions
+			this.fitnessFunctions.forEach(fitnessFunction -> c.setFitness(fitnessFunction, 1.0));
+			
+		} else {
+		
+			this.fitnessFunctions.forEach(fitnessFunction -> fitnessFunction.getFitness(c));
+			// if one of the coverage criterion is Criterion.EXCEPTION, then we have to analyse the results
+			// of the execution to look for generated exceptions
+			if (ArrayUtil.contains(Properties.CRITERION, Properties.Criterion.EXCEPTION)) {
+				ExceptionCoverageSuiteFitness.calculateExceptionInfo(
+						Collections.singletonList(c.getLastExecutionResult()),
+						new HashMap<>(), new HashMap<>(), new HashMap<>(), new ExceptionCoverageSuiteFitness());
+			}
 		}
 
 		this.notifyEvaluation(c);

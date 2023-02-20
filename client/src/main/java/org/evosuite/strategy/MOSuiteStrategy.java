@@ -23,6 +23,8 @@ import org.evosuite.ClientProcess;
 import org.evosuite.Properties;
 import org.evosuite.Properties.Criterion;
 import org.evosuite.coverage.TestFitnessFactory;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
+import org.evosuite.coverage.line.ReachabilityCoverageTestFitness;
 import org.evosuite.ga.ChromosomeFactory;
 import org.evosuite.ga.FitnessFunction;
 import org.evosuite.ga.TestSuiteChromosomeFactoryMock;
@@ -33,16 +35,21 @@ import org.evosuite.result.TestGenerationResultBuilder;
 import org.evosuite.rmi.ClientServices;
 import org.evosuite.rmi.service.ClientState;
 import org.evosuite.statistics.RuntimeVariable;
+import org.evosuite.testcarver.extraction.CarvingManager;
 import org.evosuite.testcase.TestFitnessFunction;
 import org.evosuite.testcase.execution.ExecutionTracer;
 import org.evosuite.testcase.factories.RandomLengthTestFactory;
+import org.evosuite.testsuite.TransferTestSuiteAnalyser;
 import org.evosuite.testsuite.TestSuiteChromosome;
 import org.evosuite.utils.ArrayUtil;
 import org.evosuite.utils.LoggingUtils;
 import org.evosuite.utils.Randomness;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Test generation with MOSA
@@ -52,6 +59,8 @@ import java.util.List;
  */
 public class MOSuiteStrategy extends TestGenerationStrategy {
 
+	protected static final Logger logger = LoggerFactory.getLogger(MOSuiteStrategy.class);
+	
 	@Override	
 	public TestSuiteChromosome generateTests() {
 		// Currently only LIPS uses its own Archive
@@ -79,13 +88,29 @@ public class MOSuiteStrategy extends TestGenerationStrategy {
 		List<TestFitnessFactory<? extends TestFitnessFunction>> goalFactories = getFitnessFactories();
 		List<FitnessFunction<TestSuiteChromosome>> fitnessFunctions = new ArrayList<>();
 
+		Set<TestFitnessFunction> junitCoveredGoals = TransferTestSuiteAnalyser.getJUnitCoveredGoals(goalFactories);
 		for (TestFitnessFactory<? extends TestFitnessFunction> f : goalFactories) {
 			for (TestFitnessFunction goal : f.getCoverageGoals()) {
+				
+				
 				FitnessFunction<TestSuiteChromosome> mock = new TestSuiteFitnessFunctionMock(goal);
 				fitnessFunctions.add(mock);
 			}
 		}
 
+		logger.warn("Since carving and initial recording is done, ReachabilityCoverageFactory will stop recording");
+		if (Properties.SELECTED_JUNIT != null && !CarvingManager.getInstance().isCarvingDone()) {
+			throw new RuntimeException("carving isn't done yet, but was assumed to be done here.");
+		} else {
+			if (Properties.SELECTED_JUNIT == null) {
+				logger.warn("No carving of tests was completed. Please check if this was intended!");
+			} else {
+				logger.warn("Carving is done");
+			}
+		}
+		ReachabilityCoverageFactory.isRecording = false;
+		
+		
 		algorithm.addFitnessFunctions(fitnessFunctions);
 
 		// if (Properties.SHOW_PROGRESS && !logger.isInfoEnabled())

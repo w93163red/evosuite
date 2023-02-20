@@ -21,6 +21,7 @@ package org.evosuite.coverage.branch;
 
 import org.evosuite.Properties;
 import org.evosuite.coverage.ControlFlowDistance;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.ga.archive.Archive;
 import org.evosuite.testcase.ExecutableChromosome;
 import org.evosuite.testcase.TestChromosome;
@@ -158,9 +159,19 @@ public class BranchCoverageTestFitness extends TestFitnessFunction {
 	 */
 	@Override
 	public double getFitness(TestChromosome individual, ExecutionResult result) {
+		
+		if (ReachabilityCoverageFactory.abalation_turnOffOtherGoals) {
+			return 1.0;
+		}
+		
 		ControlFlowDistance distance = goal.getDistance(result);
 
 		double fitness = distance.getResultingBranchFitness();
+		
+
+		if (hasCalleeMethodAsTestStatement(result)) { // vuln lib method should not be a statement in the test
+			fitness = 1.0;
+		}
 
 		if(logger.isDebugEnabled()) {
 			logger.debug("Goal at line "+goal.getLineNumber()+": approach level = " + distance.getApproachLevel()

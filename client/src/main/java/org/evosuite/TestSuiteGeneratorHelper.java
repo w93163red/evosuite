@@ -110,6 +110,9 @@ public class TestSuiteGeneratorHelper {
       case TRYCATCH:
         LoggingUtils.getEvoLogger().info("  - Try-Catch Branch Coverage");
         break;
+      case REACHABILITY:
+    	LoggingUtils.getEvoLogger().info("  - Reachability");
+    	break;
       default:
         throw new IllegalArgumentException("Unrecognized criterion: " + criterion);
     }

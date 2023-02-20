@@ -25,9 +25,12 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.evosuite.Properties;
+import org.evosuite.coverage.io.input.HJInputObserver;
 import org.evosuite.utils.LoggingUtils;
 import org.evosuite.utils.Randomness;
 import org.objectweb.asm.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Gordon Fraser
@@ -35,6 +38,8 @@ import org.objectweb.asm.Type;
  */
 public class StaticConstantPool implements ConstantPool {
 
+	private static final Logger logger = LoggerFactory.getLogger(StaticConstantPool.class);
+	
 	private final Set<String> stringPool = Collections.synchronizedSet(new LinkedHashSet<>());
 
 	private final Set<Type> typePool = Collections.synchronizedSet(new LinkedHashSet<>());
@@ -86,7 +91,10 @@ public class StaticConstantPool implements ConstantPool {
 	 */
 	@Override
 	public String getRandomString() {
-		return Randomness.choice(stringPool);
+		
+		String result = Randomness.choice(stringPool);
+//		logger.warn("returning string " + result + " from a pool of  " + stringPool.size());
+		return result;
 	}
 
 	@Override
@@ -159,6 +167,12 @@ public class StaticConstantPool implements ConstantPool {
 
 		if (object instanceof String) {
 			String string = (String) object;
+			
+			if (string.contains("quine")) {
+				logger.warn("before string containing `quine` to constant pool");
+			}
+
+			
 			if(string.length() > Properties.MAX_STRING)
 				return;
 			// String literals are constrained to 65535 bytes 
@@ -166,11 +180,24 @@ public class StaticConstantPool implements ConstantPool {
 			if (string.length() > 65535)
 				return;
 			stringPool.add(string);
+			
+			if (string.contains("quine")) {
+				logger.warn("adding string containing `quine` to constant pool");
+			}
+
+//			logger.warn("string pool has " + stringPool.size() + " items in it.");
 		} else if (object instanceof Type) {
 			while (((Type) object).getSort() == Type.ARRAY) {
 				object = ((Type) object).getElementType();
 			}
+//			logger.warn("adding to type pool" + object);
+//			try {
+//				throw new RuntimeException("adding to type pool = " + object);
+//			} catch (RuntimeException e) {
+//				logger.error("type pool", e);
+//			}
 			typePool.add((Type) object);
+//			logger.warn("typePool pool has " + typePool.size() + " items in it.");
 		}
 
 		else if (object instanceof Integer) {

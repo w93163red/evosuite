@@ -33,6 +33,7 @@ import org.evosuite.coverage.exception.TryCatchCoverageTestFitness;
 import org.evosuite.coverage.io.input.InputCoverageTestFitness;
 import org.evosuite.coverage.io.output.OutputCoverageTestFitness;
 import org.evosuite.coverage.line.LineCoverageTestFitness;
+import org.evosuite.coverage.line.ReachabilityCoverageTestFitness;
 import org.evosuite.coverage.method.MethodCoverageTestFitness;
 import org.evosuite.coverage.method.MethodNoExceptionCoverageTestFitness;
 import org.evosuite.coverage.mutation.StrongMutationTestFitness;
@@ -111,7 +112,11 @@ public class MultiCriteriaManager extends StructuralGoalManager implements Seria
 					break; // branches have been handled by getControlDepencies4Branches
 				case EXCEPTION:
 					break; // exception coverage is handled by calculateFitness
+				case REACHABILITY:
+					addDependencies4Reachability();
+					break; 
 				case LINE:
+			
 					addDependencies4Line();
 					break;
 				case STATEMENT:
@@ -148,6 +153,11 @@ public class MultiCriteriaManager extends StructuralGoalManager implements Seria
 
 		// initialize current goals
 		this.currentGoals.addAll(graph.getRootBranches());
+		for (TestFitnessFunction currentGoal : currentGoals) {
+			if (currentGoal instanceof LineCoverageTestFitness) {
+				logger.warn("initial goal: " + currentGoal.getTargetClass() + ":" + currentGoal.getTargetMethod() + "ln=" + ((LineCoverageTestFitness) currentGoal).getLine());
+			}
+		}
 	}
 
 	private void addDependencies4TryCatch() {
@@ -177,6 +187,7 @@ public class MultiCriteriaManager extends StructuralGoalManager implements Seria
 			} else { // we don't want to take the given branch
 				branchCoverageFalseMap.put(goal.getBranch().getActualBranchId(), ff);
 			}
+//			logger.warn("control dependnecies for branch in class: " + goal.getClassName());
 		}
 	}
 
@@ -236,6 +247,19 @@ public class MultiCriteriaManager extends StructuralGoalManager implements Seria
 						}
 					}
 				}
+			}
+		}
+	}
+	
+	private void addDependencies4Reachability() {
+		// no dependencies. add all to current goal.
+		logger.debug("Added dependencies for Reachability");
+		for (TestFitnessFunction ff : this.getUncoveredGoals()){
+			if (ff instanceof ReachabilityCoverageTestFitness) {
+				
+				this.currentGoals.add(ff);
+				
+				
 			}
 		}
 	}
@@ -342,7 +366,16 @@ public class MultiCriteriaManager extends StructuralGoalManager implements Seria
 				else {
 					for (ControlDependency cd : cds) {
 						BranchCoverageTestFitness fitness = BranchCoverageFactory.createBranchCoverageTestFitness(cd);
-						this.dependencies.get(fitness).add(ff);
+//						logger.warn("dependencies for line. Fitness= " + fitness);
+//						logger.warn("dependencies are " + this.dependencies.get(fitness));
+//						logger.warn("ff is " + ff);
+						if (this.dependencies.containsKey(fitness)) {
+							this.dependencies.get(fitness)
+								.add(ff);
+						} else {
+							// TRANSFER: fallback to using currentGoals
+							this.currentGoals.add(ff);
+						}
 					}
 				}
 			}
@@ -388,7 +421,7 @@ public class MultiCriteriaManager extends StructuralGoalManager implements Seria
 		c.setChanged(false);
 
 		// If the test failed to execute properly, or if the test does not cover anything,
-    	// it means none of the current gaols could be reached.
+    	// it means none of the current goals could be reached.
 		if (result.hasTimeout() || result.hasTestException() || result.getTrace().getCoveredLines().size() == 0){
       		currentGoals.forEach(f -> c.setFitness(f, Double.MAX_VALUE)); // assume minimization
 			return;
@@ -435,6 +468,9 @@ public class MultiCriteriaManager extends StructuralGoalManager implements Seria
 						targets.addLast(child);
 					}
 					for (TestFitnessFunction dependentTarget : dependencies.get(target)){
+						if (dependentTarget instanceof LineCoverageTestFitness) {
+							logger.warn("unlocking goal: " + dependentTarget.getTargetClass() + ":" + dependentTarget.getTargetMethod()  + "line: " + ((LineCoverageTestFitness) dependentTarget).getLine());
+						}
 						targets.addLast(dependentTarget);
 					}
 				}

@@ -126,7 +126,8 @@ public class CFGMethodAdapter extends MethodVisitor {
 
 		super(Opcodes.ASM9, new AnnotatedMethodNode(access, name, desc, signature,
 		        exceptions));
-
+		logger.info("cfg method adaptor for class=" + className);
+		
 		this.next = mv;
 		this.className = className; // .replace('/', '.');
 		this.access = access;
@@ -159,7 +160,7 @@ public class CFGMethodAdapter extends MethodVisitor {
 	/** {@inheritDoc} */
 	@Override
 	public void visitEnd() {
-		logger.debug("Creating CFG of "+className+"."+methodName);
+		logger.info("Creating CFG of "+className+"."+methodName);
 		boolean isExcludedMethod = excludeMethod || EXCLUDE.contains(methodName);
 		boolean isMainMethod = plain_name.equals("main") && Modifier.isStatic(access);
 

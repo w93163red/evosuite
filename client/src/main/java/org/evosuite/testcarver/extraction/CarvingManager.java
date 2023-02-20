@@ -30,6 +30,7 @@ import java.util.Set;
 
 import org.evosuite.Properties;
 import org.evosuite.classpath.ResourceList;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.rmi.ClientServices;
 import org.evosuite.rmi.service.ClientState;
 import org.evosuite.testcarver.capture.FieldRegistry;
@@ -64,6 +65,10 @@ public class CarvingManager {
 	private Map<Class<?>, List<TestCase>> carvedTests = new LinkedHashMap<>();
 	
 	private boolean carvingDone = false;
+	
+	public boolean isCarvingDone() {
+		return carvingDone;
+	}
 	
 	private Collection<String> getListOfJUnitClassNames() throws IllegalStateException {
 
@@ -115,15 +120,19 @@ public class CarvingManager {
 		// TODO: This really needs to be done in a nicer way!
 		FieldRegistry.carvingClassLoader = classLoader;
 		try {
+			logger.warn("loading class for carving");
 			// instrument target class
 			classLoader.loadClass(Properties.TARGET_CLASS);
 		} catch (final ClassNotFoundException e) {
 			throw new RuntimeException(e);
 		}
+		
+		logger.warn("continue loading junit tests for carving");
 
 		for (String className : junitTestNames) {
 			String classNameWithDots = ResourceList.getClassNameFromResourcePath(className);
 			try {
+				logger.warn("load test : " + classNameWithDots);
 				final Class<?> junitClass = classLoader.loadClass(classNameWithDots);
 				junitTestClasses.add(junitClass);
 			} catch (ClassNotFoundException e) {
@@ -134,7 +143,7 @@ public class CarvingManager {
 		final Class<?>[] classes = new Class<?>[junitTestClasses.size()];
 		junitTestClasses.toArray(classes);
 		Result result = runner.run(classes);
-		logger.info("Result: {}/{}", result.getFailureCount(), result.getRunCount());
+		logger.warn("Result: {}/{}", result.getFailureCount(), result.getRunCount());
 		for(Failure failure : result.getFailures()) {
 			logger.info("Failure: {}", failure.getMessage());
 			logger.info("Exception: {}", failure.getException());
@@ -153,7 +162,7 @@ public class CarvingManager {
 					executionResult = TestCaseExecutor.runTest(test);
 					
 				} catch(Throwable t) {
-					logger.info("Error while executing carved test {}: {}", testName, t);
+					logger.warn("Error while executing carved test {}: {}", testName, t);
 					continue;
 				}
 				if (executionResult.noThrownExceptions()) {
@@ -203,6 +212,7 @@ public class CarvingManager {
 			carvedTests.put(targetClass, processedTests);
 		}
 		carvingDone = true;
+		
 		
 		// TODO: Argh.
 		FieldRegistry.carvingClassLoader = null;

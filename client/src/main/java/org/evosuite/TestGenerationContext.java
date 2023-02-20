@@ -30,6 +30,7 @@ import org.evosuite.contracts.ContractChecker;
 import org.evosuite.contracts.FailingTestSet;
 import org.evosuite.coverage.branch.BranchPool;
 import org.evosuite.coverage.dataflow.DefUsePool;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.coverage.mutation.MutationPool;
 import org.evosuite.coverage.mutation.MutationTimeoutStoppingCondition;
 import org.evosuite.ga.archive.Archive;
@@ -197,7 +198,9 @@ public class TestGenerationContext {
 
 		// TODO: Why are we doing this?
 		if (Properties.INSTRUMENT_CONTEXT || ArrayUtil.contains(Properties.CRITERION, Properties.Criterion.DEFUSE)
-				|| ArrayUtil.contains(Properties.CRITERION, Properties.Criterion.IBRANCH)) {
+				|| ArrayUtil.contains(Properties.CRITERION, Properties.Criterion.IBRANCH)
+				|| ReachabilityCoverageFactory.targetCalleeClazz != null
+				) {
 			// || ArrayUtil.contains(Properties.CRITERION,
 			// Properties.Criterion.CBRANCH)) {
 			try {

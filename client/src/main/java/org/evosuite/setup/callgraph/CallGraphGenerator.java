@@ -23,6 +23,7 @@ package org.evosuite.setup.callgraph;
 import java.util.*;
 
 import org.evosuite.Properties;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.instrumentation.BytecodeInstrumentation;
 import org.evosuite.setup.DependencyAnalysis;
 import org.evosuite.setup.InheritanceTree;
@@ -47,6 +48,7 @@ public class CallGraphGenerator {
 	private static final Logger logger = LoggerFactory.getLogger(CallGraphGenerator.class);
 
 	public static CallGraph analyze(String className) {
+		logger.info("analyse classname=" + className);
 		ClassNode targetClass = DependencyAnalysis.getClassNode(className);
 		CallGraph callgraph = new CallGraph(className);
 		if (targetClass != null)
@@ -114,7 +116,20 @@ public class CallGraphGenerator {
 	@SuppressWarnings("unchecked")
 	private static void handle(CallGraph callGraph, ClassNode targetClass, int depth) {
 		List<MethodNode> methods = targetClass.methods;
+		boolean isTransferCallerClass = targetClass.name.equals(ReachabilityCoverageFactory.targetCallerClazz);
+		if (isTransferCallerClass) {
+			logger.warn("found caller class when handling call graph");
+		}
+		logger.debug("handle classname=" + targetClass + "  at depth=" + depth);
 		for (MethodNode mn : methods) {
+			if (isTransferCallerClass) {
+				if (mn.name.equals(ReachabilityCoverageFactory.targetCallerMethod)) {
+					logger.warn("found caller class method: " + mn.name);
+					handleMethodNode(callGraph, targetClass, mn, depth);		
+				}
+				
+				continue;
+			} 
 			logger.debug("Method: " + mn.name);
 			handleMethodNode(callGraph, targetClass, mn, depth);
 		}
@@ -176,6 +191,7 @@ public class CallGraphGenerator {
 	private static void handleMethodInsnNode(CallGraph callGraph, ClassNode cn, MethodNode mn,
 			MethodInsnNode methodCall, int depth) {
 
+		logger.warn("To handle method: " + methodCall.name);
 		// Only build calltree for instrumentable classes
 		if (BytecodeInstrumentation.checkIfCanInstrument(methodCall.owner.replaceAll("/", "."))) {
 			logger.debug("Handling method: " + methodCall.name);

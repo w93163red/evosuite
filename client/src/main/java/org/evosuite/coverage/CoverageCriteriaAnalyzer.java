@@ -172,6 +172,8 @@ public class CoverageCriteriaAnalyzer {
                 return RuntimeVariable.MethodCoverage;
             case METHODNOEXCEPTION:
                 return RuntimeVariable.MethodNoExceptionCoverage;
+            case REACHABILITY:
+            	return RuntimeVariable.Reachability;
             case ONLYLINE:
             case LINE:
                 return RuntimeVariable.LineCoverage;
@@ -343,6 +345,8 @@ public class CoverageCriteriaAnalyzer {
                 return RuntimeVariable.LineCoverageBitString;
             case TRYCATCH:
                 return null;
+            case REACHABILITY:
+            	return RuntimeVariable.ReachabilityCoverageBitString;
             default:
                 logger.debug("Criterion not supported: " + criterion);
                 return null;

@@ -29,6 +29,7 @@ import org.evosuite.Properties.Strategy;
 import org.evosuite.classpath.ClassPathHacker;
 import org.evosuite.classpath.ClassPathHandler;
 import org.evosuite.classpath.ResourceList;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.instrumentation.BytecodeInstrumentation;
 import org.evosuite.result.TestGenerationResult;
 import org.evosuite.result.TestGenerationResultBuilder;
@@ -169,7 +170,7 @@ public class TestGeneration {
 			}
 		}
 		try {
-			if (Properties.INSTRUMENT_CONTEXT||Properties.INHERITANCE_FILE.isEmpty()) {
+			if (Properties.INSTRUMENT_CONTEXT||Properties.INHERITANCE_FILE.isEmpty()|| ReachabilityCoverageFactory.targetCalleeMethod != null) {
 				String inheritanceFile = EvoSuite.generateInheritanceTree(cp);
 				args.add("-Dinheritance_file=" + inheritanceFile);
 			}
@@ -567,7 +568,8 @@ public class TestGeneration {
 		if(hasFailed){
 			logger.error("failed to write statistics data");
 			//note: cannot throw exception because would require refactoring of many SystemTests
-            return new ArrayList<>();
+			// TRANSFER notes: we should still print the tests for inspection, even though the data may appear invalid
+//            return new ArrayList<>();
 		}
 		
 		return results;
@@ -615,7 +617,7 @@ public class TestGeneration {
 			// Ignore?
 		}
 		try {
-			if (Properties.INSTRUMENT_CONTEXT||Properties.INHERITANCE_FILE.isEmpty()) {
+			if (Properties.INSTRUMENT_CONTEXT||Properties.INHERITANCE_FILE.isEmpty()|| ReachabilityCoverageFactory.targetCalleeMethod != null) {
 				String inheritanceFile = EvoSuite.generateInheritanceTree(cp);
 				args.add("-Dinheritance_file=" + inheritanceFile);
 			}

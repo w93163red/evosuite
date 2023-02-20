@@ -39,6 +39,7 @@ import org.evosuite.testcase.statements.FunctionalMockStatement;
 import org.evosuite.testcase.statements.Statement;
 import org.evosuite.testcase.statements.reflection.PrivateFieldStatement;
 import org.evosuite.testcase.statements.reflection.PrivateMethodStatement;
+import org.evosuite.testsuite.TransferTestSuiteAnalyser;
 import org.evosuite.testsuite.TestSuiteChromosome;
 import org.evosuite.utils.generic.GenericAccessibleObject;
 import org.evosuite.utils.generic.GenericClass;
@@ -81,7 +82,7 @@ public abstract class Archive implements Serializable {
    */
   public void addTarget(TestFitnessFunction target) {
     assert target != null;
-
+    
     if (!ArchiveUtils.isCriterionEnabled(target)) {
       throw new RuntimeException("Trying to add a target of '" + target.getClass().getSimpleName()
           + "' type to the archive, but correspondent criterion is not enabled.");

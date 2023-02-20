@@ -20,6 +20,7 @@
 package org.evosuite.instrumentation;
 
 import org.evosuite.PackageInfo;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.testcase.execution.ExecutionTracer;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
@@ -72,7 +73,16 @@ public class LineNumberMethodAdapter extends MethodVisitor {
 	}
 
 	private void addLineNumberInstrumentation(int line) {
-		LinePool.addLine(className, fullMethodName, line);
+		if (ReachabilityCoverageFactory.classToFunctionAlongCallGraph.containsKey(className)) {
+			if (ReachabilityCoverageFactory.classToFunctionAlongCallGraph.get(className).contains(fullMethodName)
+					|| fullMethodName.contains("init>")) {
+				LinePool.addLine(className, fullMethodName, line);
+//				logger.warn("added passedLine for " + className + " : " + fullMethodName + "  line is " + line);
+			} else {
+//				logger.warn("not adding passedLine for " + className + " : " + fullMethodName + "  line is " + line);
+			}
+			
+		}
 		this.visitLdcInsn(className);
 		this.visitLdcInsn(fullMethodName);
 		this.visitLdcInsn(line);
@@ -84,6 +94,7 @@ public class LineNumberMethodAdapter extends MethodVisitor {
 	/** {@inheritDoc} */
 	@Override
 	public void visitLineNumber(int line, Label start) {
+		
 		super.visitLineNumber(line, start);
 		currentLine = line;
 

@@ -20,16 +20,20 @@
 package org.evosuite.ga.metaheuristics.mosa;
 
 import org.evosuite.Properties;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
+import org.evosuite.coverage.line.ReachabilitySpecUnderInferenceUtils;
 import org.evosuite.ga.ChromosomeFactory;
 import org.evosuite.ga.comparators.OnlyCrowdingComparator;
 import org.evosuite.ga.metaheuristics.mosa.structural.MultiCriteriaManager;
 import org.evosuite.ga.operators.ranking.CrowdingDistance;
 import org.evosuite.testcase.TestChromosome;
+import org.evosuite.testcase.TestFitnessFunction;
 import org.evosuite.utils.LoggingUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -69,6 +73,9 @@ public class DynaMOSA extends AbstractMOSA {
 		List<TestChromosome> union = new ArrayList<>(this.population.size() + offspringPopulation.size());
 		union.addAll(this.population);
 		union.addAll(offspringPopulation);
+		
+		
+		logger.debug("Union Size = {}", union.size());
 
 		// Ranking the union
 		logger.debug("Union Size = {}", union.size());
@@ -126,6 +133,47 @@ public class DynaMOSA extends AbstractMOSA {
 		logger.debug("Covered goals = {}", goalsManager.getCoveredGoals().size());
 		logger.debug("Current goals = {}", goalsManager.getCurrentGoals().size());
 		logger.debug("Uncovered goals = {}", goalsManager.getUncoveredGoals().size());
+		
+		logger.warn("DynaMOSA evolve one generation. currentIteration=" + currentIteration);
+		logger.warn("DynaMOSA goals = " + goalsManager.getCoveredGoals().size() + "," + goalsManager.getUncoveredGoals().size());
+		
+		if (currentIteration == 1 || currentIteration % 5 ==0) {
+			ReachabilitySpecUnderInferenceUtils.performResetByCopyingFile();
+		}
+		
+		double iterationFitness = ReachabilitySpecUnderInferenceUtils.iterationFitness;
+		ReachabilitySpecUnderInferenceUtils.iterationFitness = 1.1;
+		if (ReachabilitySpecUnderInferenceUtils.progressHaltedFitness <= iterationFitness) {
+			
+			ReachabilitySpecUnderInferenceUtils.progressHalted += 1;
+		}
+		
+		ReachabilitySpecUnderInferenceUtils.progressHaltedFitness = Math.min(
+				iterationFitness, ReachabilitySpecUnderInferenceUtils.progressHaltedFitness);
+		
+		if (ReachabilitySpecUnderInferenceUtils.progressHalted > 30) {
+			// stuck for ten gens already
+			ReachabilitySpecUnderInferenceUtils.progressHalted = 0;
+			
+			 logger.warn("reseting population due to lack of changes (?)");
+             this.clearPopulation();
+//           this.initializePopulation();
+             this.generateInitialPopulation(Properties.POPULATION);
+
+             // Determine fitness
+             this.calculateFitness();
+//           this.notifyIteration();
+             
+
+             // Calculate dominance ranks and crowding distance
+             this.rankingFunction.computeRankingAssignment(this.population, this.goalsManager.getCurrentGoals());
+
+             for (int i = 0; i < this.rankingFunction.getNumberOfSubfronts(); i++){
+                     this.distance.fastEpsilonDominanceAssignment(this.rankingFunction.getSubfront(i), this.goalsManager.getCurrentGoals());
+             }
+			
+		}
+			
 	}
 
 	/**
@@ -134,6 +182,8 @@ public class DynaMOSA extends AbstractMOSA {
 	@Override
 	public void generateSolution() {
 		logger.debug("executing generateSolution function");
+		
+
 
 		// Set up the targets to cover, which are initially free of any control dependencies.
 		// We are trying to optimize for multiple targets at the same time.
@@ -169,6 +219,15 @@ public class DynaMOSA extends AbstractMOSA {
 		}
 
 		this.notifySearchFinished();
+		
+//		ReachabilitySpecUnderInferenceUtils.serialize(
+//				ReachabilitySpecUnderInferenceUtils.specUnderInference, 
+//				"callerSpec.evosuite");
+//		
+//		ReachabilitySpecUnderInferenceUtils.serialize(
+//				ReachabilitySpecUnderInferenceUtils.specUnderInference,
+//				ReachabilityCoverageFactory.targetIdentifier() + 
+//				".callerSpec.evosuite");
 	}
 
 	/**

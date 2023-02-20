@@ -40,6 +40,7 @@ import org.evosuite.TestGenerationContext;
 import org.evosuite.assertion.CheapPurityAnalyzer;
 import org.evosuite.assertion.Inspector;
 import org.evosuite.assertion.InspectorManager;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.graphs.cfg.BytecodeInstructionPool;
 import org.evosuite.setup.TestClusterUtils;
 import org.evosuite.setup.TestUsageChecker;
@@ -75,7 +76,8 @@ public class OutputCoverageFactory extends AbstractFitnessFactory<OutputCoverage
         List<OutputCoverageTestFitness> goals = new ArrayList<>();
 
         long start = System.currentTimeMillis();
-        String targetClass = Properties.TARGET_CLASS;
+//        String targetClass = Properties.TARGET_CLASS;
+        String targetClass = ReachabilityCoverageFactory.targetCalleeClazzAsNormalName;
 
         for (String className : BytecodeInstructionPool.getInstance(TestGenerationContext.getInstance().getClassLoaderForSUT()).knownClasses()) {
             if (!(targetClass.equals("") || className.endsWith(targetClass)))
@@ -85,7 +87,10 @@ public class OutputCoverageFactory extends AbstractFitnessFactory<OutputCoverage
                 String methodName = method.getName() + Type.getMethodDescriptor(method);
                 if (!TestUsageChecker.canUse(method) || methodName.equals("hashCode()I"))
                     continue;
-                logger.info("Adding goals for method " + className + "." + methodName);
+                
+                if (!ReachabilityCoverageFactory.targetCalleeMethod.equals(ReachabilityCoverageFactory.descriptorToActualName(methodName)))
+                	continue;
+                logger.warn("Adding goals for method " + className + "." + methodName);
                 Type returnType = Type.getReturnType(method);
 
                 int typeSort = returnType.getSort();

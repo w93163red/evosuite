@@ -20,6 +20,10 @@
 
 package org.evosuite.setup;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -42,12 +46,14 @@ import org.evosuite.TestGenerationContext;
 import org.evosuite.TimeController;
 import org.evosuite.assertion.CheapPurityAnalyzer;
 import org.evosuite.classpath.ResourceList;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.instrumentation.testability.BooleanTestabilityTransformation;
 import org.evosuite.rmi.ClientServices;
 import org.evosuite.runtime.PrivateAccess;
 import org.evosuite.runtime.classhandling.ModifiedTargetStaticFields;
 import org.evosuite.runtime.mock.MockList;
 import org.evosuite.runtime.sandbox.Sandbox;
+import org.evosuite.runtime.util.AtMostOnceLogger;
 import org.evosuite.runtime.util.Inputs;
 import org.evosuite.seeding.CastClassAnalyzer;
 import org.evosuite.seeding.CastClassManager;
@@ -116,6 +122,37 @@ public class TestClusterGenerator {
 				}
 			}
 		}
+		
+		if (ReachabilityCoverageFactory.targetCalleeClazz != null) {
+			for (String callTreeClass : callGraph.getClasses()) {
+				try {
+					if (callGraph.isCalledClass(callTreeClass) && callTreeClass.equals(ReachabilityCoverageFactory.targetCalleeClazzAsNormalName)) {
+						if (!Properties.INSTRUMENT_LIBRARIES && !DependencyAnalysis.isTargetProject(callTreeClass))
+							continue;
+						TestGenerationContext.getInstance().getClassLoaderForSUT().loadClass(callTreeClass);
+					}
+				} catch (ClassNotFoundException e) {
+					logger.info("Class not found: " + callTreeClass + ": " + e);
+				}
+			}
+			
+			if (!new File("functions_covered.log").exists()) {
+				logger.warn("failed to find functions_covered.log. Letting the other parts of the code write to it first");
+			}
+			if (new File("functions_covered.log").exists() && !new File("call_graph_methods.log").exists()) {
+				logger.warn("write to call_graph_methods");
+				try(BufferedWriter writer = new BufferedWriter(new FileWriter(new File("call_graph_methods.log")))) {
+					for (String methodclass : callGraph.getToTestClassAndMethods()) {
+						writer.write(methodclass + "\n");
+					}
+				} catch (IOException e1) {
+					throw new RuntimeException(e1);
+				}
+				throw new RuntimeException("wrote to call_graph_methods.log");
+			}
+			
+		}
+		
 
 		dependencyCache.clear();
 
@@ -381,6 +418,32 @@ public class TestClusterGenerator {
 			logger.info("Found " + subclasses.size() + " concrete subclasses");
 			targetClasses.addAll(subclasses);
 		}
+		
+
+		if (ReachabilityCoverageFactory.targetCalleeClazzAsNormalName != null) {
+			Class<?> targetCalledClass = Class.forName(ReachabilityCoverageFactory.targetCalleeClazzAsNormalName, false,
+					TestGenerationContext.getInstance().getClassLoaderForSUT());
+			targetClasses.add(targetCalledClass);
+			addDeclaredClasses(targetClasses, targetCalledClass);
+			if ((!targetCalledClass.isInterface() && Modifier.isAbstract(targetCalledClass.getModifiers())) || isInterfaceWithDefaultMethods(targetCalledClass)) {
+	
+				Set<Class<?>> subclasses = ConcreteClassAnalyzer.getInstance().getConcreteClasses(targetCalledClass,
+						inheritanceTree);
+				targetClasses.addAll(subclasses);
+			}
+		}
+
+		if (!ReachabilityCoverageFactory.additionalClasses.isEmpty()) {
+			for (String additionalClass : ReachabilityCoverageFactory.additionalClasses) {
+//				AtMostOnceLogger.warn(logger, "ReachabilityCoverageFactory.classToFunctionAlongCallGraph.keys() = " + ReachabilityCoverageFactory.classToFunctionAlongCallGraph.keySet());
+				
+				Class<?> targetCalledClass = Class.forName(additionalClass, false,
+						TestGenerationContext.getInstance().getClassLoaderForSUT());
+//				logger.warn("adding additional class = " + additionalClass);
+				targetClasses.add(targetCalledClass);
+				addDeclaredClasses(targetClasses, targetCalledClass);
+			}
+		}
 
 		// To make sure we also have anonymous inner classes double check inner
 		// classes using ASM
@@ -542,8 +605,9 @@ public class TestClusterGenerator {
 					if (!isFinalField) {
 						logger.debug("Is not final");
 						// Setting fields does not contribute to coverage, so we will only count it as a modifier
-						// if (field.getDeclaringClass().equals(clazz))
-						//	cluster.addTestCall(new GenericField(field, clazz));
+						 if (field.getDeclaringClass().equals(clazz))
+							cluster.addTestCall(new GenericField(field, clazz));
+						 
 						cluster.addModifier(new GenericClass(clazz), genericField);
 					} else {
 						logger.debug("Is final");
@@ -572,6 +636,10 @@ public class TestClusterGenerator {
 								}
 							} catch (IllegalAccessException e) {
 								logger.error(e.getMessage());
+							} catch (ExceptionInInitializerError e) {
+								logger.error("error initializing",e);
+							} catch (NoClassDefFoundError e) {
+								logger.error("error initializing",e);
 							}
 
 						}
@@ -984,9 +1052,17 @@ public class TestClusterGenerator {
 						if(!retClass.isPrimitive() && !retClass.isObject() && !retClass.isString())
 							cluster.addGenerator(new GenericClass(field.getGenericType()), genericField);
 						final boolean isFinalField = isFinalField(field);
-						if (!isFinalField) {
+						if (!isFinalField && !Character.isUpperCase(field.getName().charAt(0))) {
 							cluster.addModifier(clazz, // .getWithWildcardTypes(),
 									genericField);
+							
+							if (genericField.getFieldType().equals(Boolean.class) 
+									|| genericField.getFieldType().equals(String.class)) {
+								// add field as a "test call". we want field assignments occasionally.
+								logger.debug("adding field " + genericField);
+								cluster.addTestCall(genericField);
+							}
+							
 							addDependencies(genericField, recursionLevel + 1);
 						}
 					} catch (Throwable t) {

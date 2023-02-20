@@ -35,6 +35,7 @@ import org.evosuite.ga.FitnessFunction;
 import org.evosuite.testcase.TestChromosome;
 import org.evosuite.testcase.TestFitnessFunction;
 import org.evosuite.testcase.execution.ExecutionResult;
+import org.evosuite.testsuite.TransferTestSuiteAnalyser;
 import org.evosuite.testsuite.TestSuiteChromosome;
 import org.evosuite.utils.Randomness;
 import org.slf4j.Logger;
@@ -69,6 +70,7 @@ public class MIOArchive extends Archive {
   public void addTarget(TestFitnessFunction target) {
     super.addTarget(target);
 
+    
     if (!this.archive.containsKey(target)) {
       logger.debug("Registering new target '" + target + "'");
       this.archive.put(target, new Population(Properties.NUMBER_OF_TESTS_PER_TARGET));

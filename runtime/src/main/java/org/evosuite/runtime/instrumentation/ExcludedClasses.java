@@ -122,7 +122,8 @@ public class ExcludedClasses {
                      *
                      */
                     "org.hibernate.","org.hsqldb.","org.jboss.",
-                    "org.springframework.", "org.apache.commons.logging.", "javassist.","antlr.","org.dom4j.",
+                    "org.springframework.", "org.apache.commons.logging.", "javassist.","antlr.",
+//                    "org.dom4j.",
                     "org.aopalliance.",
                     "javax.servlet.",//note, Servlet is special. see comments in pom file
                     "org.mockito.", "org.apache", "org.hamcrest", "org.objenesis"
