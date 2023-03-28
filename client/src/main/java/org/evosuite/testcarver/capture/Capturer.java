@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.evosuite.TimeController;
 import org.evosuite.testcarver.exception.CapturerException;
 import org.slf4j.Logger;
@@ -226,12 +227,7 @@ public final class Capturer {
 			logger.info("Capturer has been stopped successfully");
 
 			FieldRegistry.clear();
-			logger.warn("stopCapture Done");
-			try {
-				throw new RuntimeException("stop Capture done");
-			} catch (Exception e) {
-				logger.error("stop capture done", e);
-			}
+			logger.info("stopCapture Done");
 			return log;
 		}
 
@@ -265,15 +261,17 @@ public final class Capturer {
 				if(TimeController.getInstance().isThereStillTimeInThisPhase())
 					setCapturing(true);
 				//}
-			} else {
-				logger.info("Method call not captured:  captureId={} receiver={} type={} method={} methodDesc={} params={}",
-						captureId, System.identityHashCode(receiver),
-						receiver.getClass().getName(), methodName,
-						methodDesc, Arrays.toString(methodParams));
 			}
+//			else {
+//				logger.info("Method call not captured:  captureId={} receiver={} type={} method={} methodDesc={} params={}",
+//						captureId, System.identityHashCode(receiver),
+//						receiver.getClass().getName(), methodName,
+//						methodDesc, Arrays.toString(methodParams));
+//			}
 		} catch(Throwable t) {
 			// TODO: Handle properly?
-			logger.debug(t.toString());
+			logger.debug("capture: " + t.toString());
+			logger.debug("trace :" + ExceptionUtils.getStackTrace(t));
 		}
 	}
 
@@ -303,7 +301,7 @@ public final class Capturer {
 			}
 		} catch(Throwable t) {
 			// TODO: Handle properly
-			logger.debug(t.toString());
+			logger.debug("enable: " + t.toString());
 
 		}
 	}

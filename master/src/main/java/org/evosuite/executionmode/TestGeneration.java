@@ -213,7 +213,6 @@ public class TestGeneration {
 	        List<String> args) {
 		
 		LoggingUtils.getEvoLogger().info("* Going to generate test cases for class: "+target);
-		
 		if (!findTargetClass(target)) {
 			final TestGenerationResult result = TestGenerationResultBuilder.buildErrorResult("Could not find target class");
 			return Collections.singletonList(Collections.singletonList(result));
@@ -312,7 +311,6 @@ public class TestGeneration {
 				cmdLine.add(arg);
 			}
 		}
-
 		switch (strategy) {
 		case EVOSUITE:
 			cmdLine.add("-Dstrategy=EvoSuite");

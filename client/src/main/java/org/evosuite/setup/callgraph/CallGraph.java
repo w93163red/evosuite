@@ -125,8 +125,7 @@ public class CallGraph implements Iterable<CallGraphEntry> {
 		CallGraphEntry from = new CallGraphEntry(targetClass, targetMethod);
 		CallGraphEntry to = new CallGraphEntry(sourceClass, sourceMethod);
 
-		logger.warn("Adding new call from: " + to + " -> " + from);
-
+//		logger.warn("Adding new call from: " + to + " -> " + from);
 		if (sourceClass.equals(className))
 			cutNodes.add(to);
 

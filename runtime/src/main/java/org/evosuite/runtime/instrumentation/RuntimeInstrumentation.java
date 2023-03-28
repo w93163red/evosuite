@@ -100,7 +100,11 @@ public class RuntimeInstrumentation {
 		if (className.contains("net.minidev.json.writer.MapperRemapped")) { // evosuite seems to hang when carving of this class is involved. weird
 			return false;
 		}
-		
+
+		if (className.contains("org.hamcrest")) { // evosuite seems to hang when carving of this class is involved. weird
+			return false;
+		}
+
 //		if (className.contains("net.minidev.json.reader.JsonWriter")) { // evosuite seems to hang when carving of this class is involved. weird
 //			return false;
 //		}

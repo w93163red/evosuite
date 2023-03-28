@@ -146,11 +146,11 @@ public class DefaultTestCase implements TestCase, Serializable {
 	@Override
 	public void addCoveredGoal(TestFitnessFunction goal) {
 		if (goal instanceof ReachabilityCoverageTestFitness) {
-			logger.warn("adding reachability to covered goals");
+			logger.info("adding reachability to covered goals");
 //			try {
 //				throw new RuntimeException();
 //			} catch (Exception e) {
-			logger.warn("!added reachability goal!");
+			logger.info("!added reachability goal!");
 //			}
 		}
 		coveredGoals.add(goal);

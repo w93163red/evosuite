@@ -102,11 +102,11 @@ public class BranchCoverageFactory extends
 		}
 		// otherwise, we still do not know what is covered by the vuln-test, just return all goals for analysis. 
 		
-		logger.warn("The following branch goals are constructed:");
+		logger.debug("The following branch goals are constructed:");
 		for (BranchCoverageTestFitness goal : goals) {
-			logger.warn(goal.toString());
+			logger.debug(goal.toString());
 		}
-		logger.warn("END branch goals");
+		logger.debug("END branch goals");
 		
 		goalComputationTime = System.currentTimeMillis() - start;
 		return goals;

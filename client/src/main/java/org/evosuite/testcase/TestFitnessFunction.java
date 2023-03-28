@@ -116,12 +116,12 @@ public abstract class TestFitnessFunction extends FitnessFunction<TestChromosome
 						&&  name.contains(ReachabilityCoverageFactory.targetCalleeMethod )) 
 				{ // same name
 					hasCalleeMethodStatement = true;
-//					logger.warn("hasCalleeMethod: flouting stmt= " + ps);
+					logger.warn("hasCalleeMethod: flouting stmt= " + ps);
 					break;
 				}
 				
 				if (ReachabilityCoverageFactory.forbiddenMethodCallsOnCallee != null && !ReachabilityCoverageFactory.forbiddenMethodCallsOnCallee.isEmpty()) {
-//					AtMostOnceLogger.warn(logger, "hasCalleeMethodAsTestStatement: checking class " + className + " against " + ReachabilityCoverageFactory.targetCalleeClazzAsNormalName + "  with name=" + name + " against forbiddenMethodCallsOnCallee");
+					AtMostOnceLogger.warn(logger, "hasCalleeMethodAsTestStatement: checking class " + className + " against " + ReachabilityCoverageFactory.targetCalleeClazzAsNormalName + "  with name=" + name + " against forbiddenMethodCallsOnCallee");
 					for (String oneForbiddenName : ReachabilityCoverageFactory.forbiddenMethodCallsOnCallee) {
 						
 						String targetPackage = ReachabilityCoverageFactory.targetCalleeClazzAsNormalName.substring(0, ReachabilityCoverageFactory.targetCalleeClazzAsNormalName.lastIndexOf(".")); 

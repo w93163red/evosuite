@@ -191,7 +191,7 @@ public class CallGraphGenerator {
 	private static void handleMethodInsnNode(CallGraph callGraph, ClassNode cn, MethodNode mn,
 			MethodInsnNode methodCall, int depth) {
 
-		logger.warn("To handle method: " + methodCall.name);
+		logger.debug("To handle method: " + methodCall.owner + " " + methodCall.name);
 		// Only build calltree for instrumentable classes
 		if (BytecodeInstrumentation.checkIfCanInstrument(methodCall.owner.replaceAll("/", "."))) {
 			logger.debug("Handling method: " + methodCall.name);

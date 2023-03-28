@@ -25,6 +25,8 @@ import org.evosuite.coverage.ControlFlowDistance;
 import org.evosuite.coverage.TestCoverageGoal;
 import org.evosuite.graphs.cfg.BytecodeInstruction;
 import org.evosuite.graphs.cfg.ControlDependency;
+import org.evosuite.runtime.util.AtMostOnceLogger;
+import org.evosuite.testcase.execution.ExecutionTraceProxy;
 import org.evosuite.testcase.statements.Statement;
 import org.evosuite.testcase.execution.ExecutionResult;
 import org.evosuite.testcase.execution.MethodCall;
@@ -97,6 +99,7 @@ public class ControlFlowDistanceCalculator {
 	 */
 	public static ControlFlowDistance getDistance(ExecutionResult result, Branch branch,
 	        boolean value, String className, String methodName) {
+		AtMostOnceLogger.warn(logger, "execution result: " + ((ExecutionTraceProxy)result.getTrace()).getTrace().toString());
 		if (result == null || className == null || methodName == null)
 			throw new IllegalArgumentException("null given");
 		if (branch == null && !value)
@@ -116,7 +119,6 @@ public class ControlFlowDistanceCalculator {
 		// if branch is null, we will just try to call the method at hand
 		if (branch == null)
 			return getRootDistance(result, className, methodName);
-
 		if(value) {
 			if (result.getTrace().getCoveredTrueBranches().contains(branch.getActualBranchId()))
 				return new ControlFlowDistance(0, 0.0);

@@ -204,8 +204,9 @@ public class CoverageAnalysis {
         ExecutionResult executionResult = new ExecutionResult(dummy.getTestCase());
 
 		Set<TestFitnessFunction> coveredGoals = new HashSet<>();
-
-		List<JUnitResult> results = ReachabilityCoverageFactory.targetCalleeClazz != null ? executeTests(testClass, ReachabilityCoverageFactory.targetCalledClazzTestMethodNames) : executeTests(testClass) ;
+		ExecutionTracer.enableTraceCalls();
+		List<JUnitResult> results = ReachabilityCoverageFactory.targetCalleeClazz != null ?
+				executeTests(testClass, ReachabilityCoverageFactory.targetCalledClazzTestMethodNames) : executeTests(testClass);
 		for (JUnitResult testResult : results) {
 		    executionResult.setTrace(testResult.getExecutionTrace());
             dummy.setLastExecutionResult(executionResult);

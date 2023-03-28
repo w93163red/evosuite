@@ -107,11 +107,11 @@ public class LineCoverageFactory extends
 		// otherwise, we still do not know what is covered by the vuln-test, just return all goals for analysis. 
 		
 		goalComputationTime = System.currentTimeMillis() - start;
-		logger.warn("The following line goals are constructed:");
+		logger.debug("The following line goals are constructed:");
 		for (LineCoverageTestFitness goal : goals) {
-			logger.warn(goal.toString());
+			logger.debug(goal.toString());
 		}
-		logger.warn("END linegoals");
+		logger.debug("END linegoals");
 		return goals;
 	}
 

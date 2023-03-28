@@ -757,7 +757,10 @@ public class ExecutionTraceProxy implements ExecutionTrace, Cloneable {
 	public void compareAgainstSpecIfCheckingAtEnd(String classname, String methodname) {
 		trace.compareAgainstSpecIfCheckingAtEnd(classname, methodname);
 	}
-	
+
+	public ExecutionTraceImpl getTrace() {
+		return trace;
+	}
 
 	
 }

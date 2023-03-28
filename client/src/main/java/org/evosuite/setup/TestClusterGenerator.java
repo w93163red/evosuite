@@ -497,7 +497,7 @@ public class TestClusterGenerator {
 			}
 		}
 
-		for (Class<?> clazz : targetClasses) {
+			for (Class<?> clazz : targetClasses) {
 			logger.info("Current SUT class: " + clazz);
 
 			if (!TestUsageChecker.canUse(clazz)) {
