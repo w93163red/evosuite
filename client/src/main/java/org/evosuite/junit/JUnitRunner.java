@@ -95,7 +95,7 @@ public class JUnitRunner {
 			Request request = Request.method(this.junitClass, methodName);
 
 			JUnitCore junit = new JUnitCore();
-			junit.addListener(new JUnitRunListener(this));
+			junit.addListener(new JUnit4RunListener(this));
 			junit.run(request);
 		}
 	}

@@ -41,9 +41,6 @@ public class LinePool {
     private static final Map<String, Map<String, Set<Integer>>> lineMap = new LinkedHashMap<>();
 	private static final Logger logger = LoggerFactory.getLogger(LinePool.class);
 
-	/** Map class names to methods to sets of line numbers */
-	private static Map<String, Map<String, Set<Integer>>> lineMap = new LinkedHashMap<>();
-
     /**
      * Insert line into map for class
      *
