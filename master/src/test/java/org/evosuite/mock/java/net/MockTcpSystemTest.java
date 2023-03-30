@@ -44,13 +44,13 @@ public class MockTcpSystemTest extends SystemTestBase {
     private static final boolean VNET = Properties.VIRTUAL_NET;
 
     @After
-    public void restoreProperties(){
+    public void restoreProperties() {
         Properties.VIRTUAL_NET = VNET;
     }
 
 
     @Test
-    public void testReceiveTcp_exception_onlyLine(){
+    public void testReceiveTcp_exception_onlyLine() {
         EvoSuite evosuite = new EvoSuite();
 
 
@@ -65,22 +65,22 @@ public class MockTcpSystemTest extends SystemTestBase {
         };
 
 
-        String[] command = new String[] { "-generateSuite", "-class", targetClass };
+        String[] command = new String[]{"-generateSuite", "-class", targetClass};
 
         Object result = evosuite.parseCommandLine(command);
         Assert.assertNotNull(result);
 
-        GeneticAlgorithm<?> ga = getGAFromResult(result);
-        TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
         System.out.println("EvolvedTestSuite:\n" + best);
 
         // should be only one test, as any exception thrown would lead to lower coverage
-        Assert.assertEquals(1 , best.getTests().size());
+        Assert.assertEquals(1, best.getTests().size());
         Assert.assertEquals("Non-optimal coverage: ", 1d, best.getCoverage(), 0.001);
     }
 
     @Test
-    public void testReceiveTcp_exception_tryCatch(){
+    public void testReceiveTcp_exception_tryCatch() {
         EvoSuite evosuite = new EvoSuite();
 
 
@@ -95,13 +95,13 @@ public class MockTcpSystemTest extends SystemTestBase {
         };
 
 
-        String[] command = new String[] { "-generateSuite", "-class", targetClass };
+        String[] command = new String[]{"-generateSuite", "-class", targetClass};
 
         Object result = evosuite.parseCommandLine(command);
         Assert.assertNotNull(result);
 
-        GeneticAlgorithm<?> ga = getGAFromResult(result);
-        TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
         System.out.println("EvolvedTestSuite:\n" + best);
 
         /*
@@ -109,12 +109,12 @@ public class MockTcpSystemTest extends SystemTestBase {
             - that covers the catch block (which has a return)
             - one with no exception
           */
-        Assert.assertEquals(2 , best.getTests().size());
+        Assert.assertEquals(2, best.getTests().size());
         Assert.assertEquals("Non-optimal coverage: ", 1d, best.getCoverage(), 0.001);
     }
 
     @Test
-    public void testReceiveTcp_exception(){
+    public void testReceiveTcp_exception() {
         EvoSuite evosuite = new EvoSuite();
 
 
@@ -130,13 +130,13 @@ public class MockTcpSystemTest extends SystemTestBase {
         };
 
 
-        String[] command = new String[] { "-generateSuite", "-class", targetClass };
+        String[] command = new String[]{"-generateSuite", "-class", targetClass};
 
         Object result = evosuite.parseCommandLine(command);
         Assert.assertNotNull(result);
 
-        GeneticAlgorithm<?> ga = getGAFromResult(result);
-        TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
         System.out.println("EvolvedTestSuite:\n" + best);
 
         /*
@@ -147,7 +147,7 @@ public class MockTcpSystemTest extends SystemTestBase {
             fitness for line: 0
             fitness for exception:  1/(1+1) = 0.5
           */
-        Assert.assertEquals(2 , best.getTests().size());
+        Assert.assertEquals(2, best.getTests().size());
         Assert.assertEquals("Unexpected fitness: ", 0.5d, best.getFitness(), 0.001);
     }
 
@@ -155,7 +155,7 @@ public class MockTcpSystemTest extends SystemTestBase {
     //TODO put back once we properly handle boolean functions with TT
     @Ignore
     @Test
-    public void testReceiveTcp_noBranch(){
+    public void testReceiveTcp_noBranch() {
         EvoSuite evosuite = new EvoSuite();
 
         /*
@@ -173,24 +173,24 @@ public class MockTcpSystemTest extends SystemTestBase {
                 Properties.Criterion.OUTPUT
         };
 
-        String[] command = new String[] { "-generateSuite", "-class", targetClass };
+        String[] command = new String[]{"-generateSuite", "-class", targetClass};
 
         Object result = evosuite.parseCommandLine(command);
         Assert.assertNotNull(result);
 
-        GeneticAlgorithm<?> ga = getGAFromResult(result);
-        TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
         System.out.println("EvolvedTestSuite:\n" + best);
 
-        List<TestFitnessFactory<? extends TestFitnessFunction>> list= TestGenerationStrategy.getFitnessFactories();
+        List<TestFitnessFactory<? extends TestFitnessFunction>> list = TestGenerationStrategy.getFitnessFactories();
 
-        Assert.assertEquals(2 , list.size());
+        Assert.assertEquals(2, list.size());
         Assert.assertEquals("Non-optimal coverage: ", 1d, best.getCoverage(), 0.001);
     }
 
 
     @Test
-    public void testReceiveTcp(){
+    public void testReceiveTcp() {
         EvoSuite evosuite = new EvoSuite();
 
         String targetClass = ReceiveTcp.class.getCanonicalName();
@@ -199,13 +199,13 @@ public class MockTcpSystemTest extends SystemTestBase {
         Properties.SEARCH_BUDGET = 200_000;
         Properties.VIRTUAL_NET = true;
 
-        String[] command = new String[] { "-generateSuite", "-class", targetClass };
+        String[] command = new String[]{"-generateSuite", "-class", targetClass};
 
         Object result = evosuite.parseCommandLine(command);
         Assert.assertNotNull(result);
 
-        GeneticAlgorithm<?> ga = getGAFromResult(result);
-        TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
         System.out.println("EvolvedTestSuite:\n" + best);
 
         int goals = TestGenerationStrategy.getFitnessFactories().get(0).getCoverageGoals().size(); // assuming single fitness function
@@ -214,7 +214,7 @@ public class MockTcpSystemTest extends SystemTestBase {
     }
 
     @Test
-    public void testSendTcp(){
+    public void testSendTcp() {
         EvoSuite evosuite = new EvoSuite();
 
         String targetClass = SendTcp.class.getCanonicalName();
@@ -223,13 +223,13 @@ public class MockTcpSystemTest extends SystemTestBase {
         Properties.SEARCH_BUDGET = 20000;
         Properties.VIRTUAL_NET = true;
 
-        String[] command = new String[] { "-generateSuite", "-class", targetClass };
+        String[] command = new String[]{"-generateSuite", "-class", targetClass};
 
         Object result = evosuite.parseCommandLine(command);
         Assert.assertNotNull(result);
 
-        GeneticAlgorithm<?> ga = getGAFromResult(result);
-        TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
         System.out.println("EvolvedTestSuite:\n" + best);
 
         int goals = TestGenerationStrategy.getFitnessFactories().get(0).getCoverageGoals().size(); // assuming single fitness function

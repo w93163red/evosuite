@@ -19,28 +19,30 @@
  */
 package org.evosuite.symbolic.solver.smt;
 
+import org.evosuite.symbolic.solver.SmtSort;
+
 public final class SmtFunctionDeclaration {
 
-	private final String functionName;
+    private final String functionName;
 
-	private final String functionSort;
+    private final SmtSort[] functionSorts;
 
-	public SmtFunctionDeclaration(String funcName, String funcSort) {
-		this.functionName = funcName;
-		this.functionSort = funcSort;
-	}
+    public SmtFunctionDeclaration(String funcName, SmtSort... funcSorts) {
+        this.functionName = funcName;
+        this.functionSorts = funcSorts;
+    }
 
-	public String getFunctionName() {
-		return functionName;
-	}
+    public String getFunctionName() {
+        return functionName;
+    }
 
-	public String getFunctionSort() {
-		return functionSort;
-	}
-	
-	public String toString() {
-		SmtQueryPrinter printer = new SmtQueryPrinter();
-		String str = printer.print(this);
-		return str;
-	}
+    public SmtSort[] getFunctionSorts() {
+        return functionSorts;
+    }
+
+    public String toString() {
+        SmtQueryPrinter printer = new SmtQueryPrinter();
+        String str = printer.print(this);
+        return str;
+    }
 }

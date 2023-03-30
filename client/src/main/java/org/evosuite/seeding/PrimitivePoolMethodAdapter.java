@@ -31,38 +31,37 @@ import org.slf4j.LoggerFactory;
  * <p>
  * PrimitivePoolMethodAdapter class.
  * </p>
- * 
+ *
  * @author Gordon Fraser
  */
 public class PrimitivePoolMethodAdapter extends MethodVisitor {
 	private static final Logger logger = LoggerFactory.getLogger(PrimitivePoolMethodAdapter.class);
 
-	// private final PrimitivePool constantPool = PrimitivePool.getInstance();
+    // private final PrimitivePool constantPool = PrimitivePool.getInstance();
 
-	private final ConstantPoolManager poolManager = ConstantPoolManager.getInstance();
+    private final ConstantPoolManager poolManager = ConstantPoolManager.getInstance();
 
-	private final String className;
+    private final String className;
 
-	/**
-	 * <p>
-	 * Constructor for PrimitivePoolMethodAdapter.
-	 * </p>
-	 * 
-	 * @param mv
-	 *            a {@link org.objectweb.asm.MethodVisitor} object.
-	 */
-	public PrimitivePoolMethodAdapter(MethodVisitor mv, String className) {
-		super(Opcodes.ASM9, mv);
-		this.className = className;
-	}
+    /**
+     * <p>
+     * Constructor for PrimitivePoolMethodAdapter.
+     * </p>
+     *
+     * @param mv a {@link org.objectweb.asm.MethodVisitor} object.
+     */
+    public PrimitivePoolMethodAdapter(MethodVisitor mv, String className) {
+        super(Opcodes.ASM9, mv);
+        this.className = className;
+    }
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * This is a hack to avoid deadlocks because we are only testing single
-	 * threaded stuff. This will be replaced with something nicer once Sebastian
-	 * has found a solution
-	 */
+    /**
+     * {@inheritDoc}
+     * <p>
+     * This is a hack to avoid deadlocks because we are only testing single
+     * threaded stuff. This will be replaced with something nicer once Sebastian
+     * has found a solution
+     */
 	/*
 	@Override
 	public void visitInsn(int opcode) {
@@ -74,21 +73,21 @@ public class PrimitivePoolMethodAdapter extends MethodVisitor {
 	}
 	*/
 
-	/* (non-Javadoc)
-	 * @see org.objectweb.asm.MethodAdapter#visitLookupSwitchInsn(org.objectweb.asm.Label, int[], org.objectweb.asm.Label[])
-	 */
-	@Override
-	public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
-		for (int key : keys) {
-			// constantPool.add(key);
-			if (DependencyAnalysis.isTargetClassName(className)) {
-				poolManager.addSUTConstant(key);
-			} else {
-				poolManager.addNonSUTConstant(key);
-			}
-		}
-		super.visitLookupSwitchInsn(dflt, keys, labels);
-	}
+    /* (non-Javadoc)
+     * @see org.objectweb.asm.MethodAdapter#visitLookupSwitchInsn(org.objectweb.asm.Label, int[], org.objectweb.asm.Label[])
+     */
+    @Override
+    public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
+        for (int key : keys) {
+            // constantPool.add(key);
+            if (DependencyAnalysis.isTargetClassName(className)) {
+                poolManager.addSUTConstant(key);
+            } else {
+                poolManager.addNonSUTConstant(key);
+            }
+        }
+        super.visitLookupSwitchInsn(dflt, keys, labels);
+    }
 
 	/** {@inheritDoc} */
 	@Override
@@ -102,7 +101,7 @@ public class PrimitivePoolMethodAdapter extends MethodVisitor {
 				if (Properties.JUNIT.contains(className) || (Properties.SELECTED_JUNIT != null && Properties.SELECTED_JUNIT.contains(className))) {
 					poolManager.addSUTConstant(operand);
 				} else {
-				
+
 					poolManager.addNonSUTConstant(operand);
 				}
 			}
@@ -117,7 +116,7 @@ public class PrimitivePoolMethodAdapter extends MethodVisitor {
 		if (DependencyAnalysis.isTargetClassName(className)) {
 			poolManager.addSUTConstant(cst);
 		} else {
-			
+
 			if (Properties.JUNIT.equals(className) || (Properties.SELECTED_JUNIT != null && Properties.SELECTED_JUNIT.equals(className))) {
 //				logger.warn("adding ldcinst constant for " + className);
 				poolManager.addSUTConstant(cst);
@@ -127,7 +126,7 @@ public class PrimitivePoolMethodAdapter extends MethodVisitor {
 		}
 		super.visitLdcInsn(cst);
 	}
-	
+
 	@Override
 	public void visitInsn(int opcode) {
 		Object constant = null;

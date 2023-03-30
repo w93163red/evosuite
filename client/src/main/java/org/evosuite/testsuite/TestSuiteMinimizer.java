@@ -20,9 +20,9 @@
 package org.evosuite.testsuite;
 
 import org.evosuite.Properties;
+import org.evosuite.Properties.SecondaryObjective;
 import org.evosuite.TestGenerationContext;
 import org.evosuite.TimeController;
-import org.evosuite.Properties.SecondaryObjective;
 import org.evosuite.coverage.TestFitnessFactory;
 import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.ga.ConstructionFailedException;
@@ -32,7 +32,10 @@ import org.evosuite.rmi.ClientServices;
 import org.evosuite.rmi.service.ClientState;
 import org.evosuite.rmi.service.ClientStateInformation;
 import org.evosuite.statistics.RuntimeVariable;
-import org.evosuite.testcase.*;
+import org.evosuite.testcase.TestCase;
+import org.evosuite.testcase.TestChromosome;
+import org.evosuite.testcase.TestFactory;
+import org.evosuite.testcase.TestFitnessFunction;
 import org.evosuite.testcase.execution.ExecutionTracer;
 import org.evosuite.utils.LoggingUtils;
 import org.slf4j.Logger;
@@ -46,7 +49,7 @@ import static java.util.Comparator.comparingInt;
  * <p>
  * TestSuiteMinimizer class.
  * </p>
- * 
+ *
  * @author Gordon Fraser
  */
 public class TestSuiteMinimizer {
@@ -83,7 +86,7 @@ public class TestSuiteMinimizer {
      * minimize
      * </p>
      *
-     * @param suite             a {@link org.evosuite.testsuite.TestSuiteChromosome} object.
+     * @param suite           a {@link org.evosuite.testsuite.TestSuiteChromosome} object.
      * @param minimizePerTest true is to minimize tests, false is to minimize suites.
      */
     public void minimize(TestSuiteChromosome suite, boolean minimizePerTest) {
@@ -131,7 +134,7 @@ public class TestSuiteMinimizer {
                 //logger.warn("Removing " + coveredGoals + " goals already covered by JUnit (total: " + goals + ")");
                 goals.removeAll(coveredGoals);
                 logger.info("Remaining goals: " + goals.size() + ": " + goals);
-            } catch(ClassNotFoundException e){
+            } catch (ClassNotFoundException e) {
                 LoggingUtils.getEvoLogger().warn("* Failed to find JUnit test suite: " + Properties.JUNIT);
             }
         }
@@ -173,10 +176,10 @@ public class TestSuiteMinimizer {
             updateClientStatus(numGoals > 0 ? 100 * currentGoal / numGoals : 100);
             currentGoal++;
             if (isTimeoutReached()) {
-				/*
-				 * FIXME: if timeout, this algorithm should be changed in a way that the modifications
-				 * done so far are not lost
-				 */
+                /*
+                 * FIXME: if timeout, this algorithm should be changed in a way that the modifications
+                 * done so far are not lost
+                 */
                 logger.warn("Minimization timeout. Roll back to original test suite");
                 return;
             }
@@ -219,7 +222,7 @@ public class TestSuiteMinimizer {
                     logger.warn("Minimization timeout. Roll back to original test suite");
                     return;
                 }
-                
+
                 // TODO: Need proper list of covered goals
                 copy.getTestCase().clearCoveredGoals();
 
@@ -336,7 +339,7 @@ public class TestSuiteMinimizer {
                         modified = false;
                     }
 
-                    if(!modified){
+                    if (!modified) {
                         testChromosome.setChanged(false);
                         testChromosome.setTestCase(originalTestChromosome.getTestCase());
                         logger.debug("Deleting failed");

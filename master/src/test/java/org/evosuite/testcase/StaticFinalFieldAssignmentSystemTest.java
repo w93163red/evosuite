@@ -39,16 +39,16 @@ public class StaticFinalFieldAssignmentSystemTest extends SystemTestBase {
 
         String targetClass = StaticFinalAssignment.class.getCanonicalName();
         Properties.TARGET_CLASS = targetClass;
-        String[] command = new String[] { "-generateSuite", "-class", targetClass };
+        String[] command = new String[]{"-generateSuite", "-class", targetClass};
         // Properties.OUTPUT_VARIABLES = "" + RuntimeVariable.HadUnstableTests;
 
         Object result = evosuite.parseCommandLine(command);
 
-        GeneticAlgorithm<?> ga = getGAFromResult(result);
-        TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
 
         String code = best.toString();
 
-        Assert.assertFalse("Contains illegal assignment to final variable: "+code, code.contains(".FOO = "));
+        Assert.assertFalse("Contains illegal assignment to final variable: " + code, code.contains(".FOO = "));
     }
 }

@@ -23,27 +23,12 @@ import org.evosuite.Properties;
 import org.evosuite.Properties.Criterion;
 import org.evosuite.coverage.ambiguity.AmbiguityCoverageFactory;
 import org.evosuite.coverage.ambiguity.AmbiguityCoverageSuiteFitness;
-import org.evosuite.coverage.branch.BranchCoverageFactory;
-import org.evosuite.coverage.branch.BranchCoverageSuiteFitness;
-import org.evosuite.coverage.branch.BranchCoverageTestFitness;
-import org.evosuite.coverage.branch.OnlyBranchCoverageFactory;
-import org.evosuite.coverage.branch.OnlyBranchCoverageSuiteFitness;
-import org.evosuite.coverage.branch.OnlyBranchCoverageTestFitness;
+import org.evosuite.coverage.branch.*;
 import org.evosuite.coverage.cbranch.CBranchFitnessFactory;
 import org.evosuite.coverage.cbranch.CBranchSuiteFitness;
 import org.evosuite.coverage.cbranch.CBranchTestFitness;
-import org.evosuite.coverage.dataflow.AllDefsCoverageFactory;
-import org.evosuite.coverage.dataflow.AllDefsCoverageSuiteFitness;
-import org.evosuite.coverage.dataflow.AllDefsCoverageTestFitness;
-import org.evosuite.coverage.dataflow.DefUseCoverageFactory;
-import org.evosuite.coverage.dataflow.DefUseCoverageSuiteFitness;
-import org.evosuite.coverage.dataflow.DefUseCoverageTestFitness;
-import org.evosuite.coverage.exception.ExceptionCoverageFactory;
-import org.evosuite.coverage.exception.ExceptionCoverageSuiteFitness;
-import org.evosuite.coverage.exception.ExceptionCoverageTestFitness;
-import org.evosuite.coverage.exception.TryCatchCoverageFactory;
-import org.evosuite.coverage.exception.TryCatchCoverageSuiteFitness;
-import org.evosuite.coverage.exception.TryCatchCoverageTestFitness;
+import org.evosuite.coverage.dataflow.*;
+import org.evosuite.coverage.exception.*;
 import org.evosuite.coverage.ibranch.IBranchFitnessFactory;
 import org.evosuite.coverage.ibranch.IBranchSuiteFitness;
 import org.evosuite.coverage.ibranch.IBranchTestFitness;
@@ -93,12 +78,12 @@ import java.util.Arrays;
 
 /**
  * factory class for fitness functions
- * @author mattia
  *
+ * @author mattia
  */
 public class FitnessFunctions {
-	
-	private static final Logger logger = LoggerFactory.getLogger(FitnessFunctions.class);
+
+    private static final Logger logger = LoggerFactory.getLogger(FitnessFunctions.class);
 
 	/**
 	 * <p>
@@ -164,12 +149,12 @@ public class FitnessFunctions {
 			return new BranchCoverageSuiteFitness();
 		}
 	}
-	
+
 	/**
 	 * <p>
 	 * getFitnessFactory
 	 * </p>
-	 * 
+	 *
 	 * @param crit
 	 *            a {@link org.evosuite.Properties.Criterion} object.
 	 * @return a {@link org.evosuite.coverage.TestFitnessFactory} object.

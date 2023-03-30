@@ -32,129 +32,128 @@ import org.junit.*;
 
 /**
  * @author Jose Miguel Rojas
- *
  */
 public class OutputCoverageFitnessFunctionSystemTest extends SystemTestBase {
 
     private static final Criterion[] defaultCriterion = Properties.CRITERION;
-    
-    private static boolean defaultArchive = Properties.TEST_ARCHIVE;
 
-	@After
-	public void resetProperties() {
-		Properties.CRITERION = defaultCriterion;
-		Properties.TEST_ARCHIVE = defaultArchive;
-	}
+    private static final boolean defaultArchive = Properties.TEST_ARCHIVE;
 
-	@Before
-	public void beforeTest() {
-        Properties.CRITERION = new Properties.Criterion[] { Criterion.BRANCH, Criterion.OUTPUT };
-	}
+    @After
+    public void resetProperties() {
+        Properties.CRITERION = defaultCriterion;
+        Properties.TEST_ARCHIVE = defaultArchive;
+    }
 
-	@Test
-	public void testOutputCoveragePrimitiveTypesWithArchive() {
-		Properties.TEST_ARCHIVE = true;
-		testOutputCoveragePrimitiveTypes();
-	}
-	
-	@Test
-	public void testOutputCoveragePrimitiveTypesWithoutArchive() {
-		Properties.TEST_ARCHIVE = false;
-		testOutputCoveragePrimitiveTypes();
-	}
-		
-	public void testOutputCoveragePrimitiveTypes() {
-		EvoSuite evosuite = new EvoSuite();
-		
-		String targetClass = MethodReturnsPrimitive.class.getCanonicalName();
-		Properties.TARGET_CLASS = targetClass;
+    @Before
+    public void beforeTest() {
+        Properties.CRITERION = new Properties.Criterion[]{Criterion.BRANCH, Criterion.OUTPUT};
+    }
 
-		String[] command = new String[] { "-generateSuite", "-class", targetClass };
-		Object result = evosuite.parseCommandLine(command);
-		GeneticAlgorithm<?> ga = getGAFromResult(result);
-		TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
+    @Test
+    public void testOutputCoveragePrimitiveTypesWithArchive() {
+        Properties.TEST_ARCHIVE = true;
+        testOutputCoveragePrimitiveTypes();
+    }
 
-		int goals = 0;
-		for (TestFitnessFactory ff : TestGenerationStrategy.getFitnessFactories())
-			goals += ff.getCoverageGoals().size();
-		Assert.assertEquals("Unexpected number of goals", 24, goals);
-		Assert.assertEquals("Non-optimal fitness: ", 0.0, best.getFitness(), 0.001);
-		Assert.assertEquals("Non-optimal coverage: ", 1d, best.getCoverage(), 0.001);
-	}
+    @Test
+    public void testOutputCoveragePrimitiveTypesWithoutArchive() {
+        Properties.TEST_ARCHIVE = false;
+        testOutputCoveragePrimitiveTypes();
+    }
 
-	@Test
-	public void testOutputCoverageWrapperTypes() {
-		EvoSuite evosuite = new EvoSuite();
+    public void testOutputCoveragePrimitiveTypes() {
+        EvoSuite evosuite = new EvoSuite();
 
-		String targetClass = MethodReturnsWrapper.class.getCanonicalName();
-		Properties.TARGET_CLASS = targetClass;
+        String targetClass = MethodReturnsPrimitive.class.getCanonicalName();
+        Properties.TARGET_CLASS = targetClass;
 
-		String[] command = new String[] { "-generateSuite", "-class", targetClass };
-		Object result = evosuite.parseCommandLine(command);
-		GeneticAlgorithm<?> ga = getGAFromResult(result);
-		TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
+        String[] command = new String[]{"-generateSuite", "-class", targetClass};
+        Object result = evosuite.parseCommandLine(command);
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
 
-		int goals = 0;
-		for (TestFitnessFactory ff : TestGenerationStrategy.getFitnessFactories())
-			goals += ff.getCoverageGoals().size();
-		Assert.assertEquals("Unexpected number of goals", 29, goals);
-		Assert.assertEquals("Non-optimal fitness: ", 5.0, best.getFitness(), 0.001);
-	}
+        int goals = 0;
+        for (TestFitnessFactory<?> ff : TestGenerationStrategy.getFitnessFactories())
+            goals += ff.getCoverageGoals().size();
+        Assert.assertEquals("Unexpected number of goals", 24, goals);
+        Assert.assertEquals("Non-optimal fitness: ", 0.0, best.getFitness(), 0.001);
+        Assert.assertEquals("Non-optimal coverage: ", 1d, best.getCoverage(), 0.001);
+    }
 
-	@Test
-	public void testOutputCoverageObjectType() {
-		EvoSuite evosuite = new EvoSuite();
+    @Test
+    public void testOutputCoverageWrapperTypes() {
+        EvoSuite evosuite = new EvoSuite();
 
-		String targetClass = MethodReturnsObject.class.getCanonicalName();
-		Properties.TARGET_CLASS = targetClass;
-		//Properties.SEARCH_BUDGET = 60;
+        String targetClass = MethodReturnsWrapper.class.getCanonicalName();
+        Properties.TARGET_CLASS = targetClass;
 
-		String[] command = new String[] { "-generateSuite", "-class", targetClass };
-		Object result = evosuite.parseCommandLine(command);
-		GeneticAlgorithm<?> ga = getGAFromResult(result);
-		TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
-		int goals = 0;
-		for (TestFitnessFactory ff : TestGenerationStrategy.getFitnessFactories())
-			goals += ff.getCoverageGoals().size();
-		Assert.assertEquals("Unexpected number of goals", 11, goals);
-		Assert.assertEquals("Unexpected coverage: ", 1d, best.getCoverage(), 0.001);
-	}
+        String[] command = new String[]{"-generateSuite", "-class", targetClass};
+        Object result = evosuite.parseCommandLine(command);
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
 
-	@Test
-	public void testOutputCoverageArray() {
-		EvoSuite evosuite = new EvoSuite();
+        int goals = 0;
+        for (TestFitnessFactory ff : TestGenerationStrategy.getFitnessFactories())
+            goals += ff.getCoverageGoals().size();
+        Assert.assertEquals("Unexpected number of goals", 29, goals);
+        Assert.assertEquals("Non-optimal fitness: ", 5.0, best.getFitness(), 0.001);
+    }
 
-		String targetClass = MethodReturnsArray.class.getCanonicalName();
-		Properties.TARGET_CLASS = targetClass;
+    @Test
+    public void testOutputCoverageObjectType() {
+        EvoSuite evosuite = new EvoSuite();
 
-		String[] command = new String[] { "-generateSuite", "-class", targetClass };
-		Object result = evosuite.parseCommandLine(command);
-		GeneticAlgorithm<?> ga = getGAFromResult(result);
-		TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
-		int goals = 0;
-		for (TestFitnessFactory ff : TestGenerationStrategy.getFitnessFactories())
-			goals += ff.getCoverageGoals().size();
-		Assert.assertEquals("Unexpected number of goals", 15, goals);
-		Assert.assertEquals("Non-optimal fitness: ", 0.0, best.getFitness(), 0.001);
-		Assert.assertEquals("Non-optimal coverage: ", 1d, best.getCoverage(), 0.001);
-	}
+        String targetClass = MethodReturnsObject.class.getCanonicalName();
+        Properties.TARGET_CLASS = targetClass;
+        //Properties.SEARCH_BUDGET = 60;
 
-	@Test
-	public void testOutputCoverageIgnoreHashCode() {
-		EvoSuite evosuite = new EvoSuite();
+        String[] command = new String[]{"-generateSuite", "-class", targetClass};
+        Object result = evosuite.parseCommandLine(command);
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
+        int goals = 0;
+        for (TestFitnessFactory ff : TestGenerationStrategy.getFitnessFactories())
+            goals += ff.getCoverageGoals().size();
+        Assert.assertEquals("Unexpected number of goals", 11, goals);
+        Assert.assertEquals("Unexpected coverage: ", 1d, best.getCoverage(), 0.001);
+    }
 
-		String targetClass = ClassWithHashCode.class.getCanonicalName();
-		Properties.TARGET_CLASS = targetClass;
+    @Test
+    public void testOutputCoverageArray() {
+        EvoSuite evosuite = new EvoSuite();
 
-		String[] command = new String[] { "-generateSuite", "-class", targetClass };
-		Object result = evosuite.parseCommandLine(command);
-		GeneticAlgorithm<?> ga = getGAFromResult(result);
-		TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
-		int goals = 0;
-		for (TestFitnessFactory ff : TestGenerationStrategy.getFitnessFactories())
-			goals += ff.getCoverageGoals().size();
-		Assert.assertEquals("Unexpected number of goals", 2, goals);
-		Assert.assertEquals("Non-optimal fitness: ", 0.0, best.getFitness(), 0.001);
-		Assert.assertEquals("Non-optimal coverage: ", 1d, best.getCoverage(), 0.001);
-	}
+        String targetClass = MethodReturnsArray.class.getCanonicalName();
+        Properties.TARGET_CLASS = targetClass;
+
+        String[] command = new String[]{"-generateSuite", "-class", targetClass};
+        Object result = evosuite.parseCommandLine(command);
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
+        int goals = 0;
+        for (TestFitnessFactory ff : TestGenerationStrategy.getFitnessFactories())
+            goals += ff.getCoverageGoals().size();
+        Assert.assertEquals("Unexpected number of goals", 15, goals);
+        Assert.assertEquals("Non-optimal fitness: ", 0.0, best.getFitness(), 0.001);
+        Assert.assertEquals("Non-optimal coverage: ", 1d, best.getCoverage(), 0.001);
+    }
+
+    @Test
+    public void testOutputCoverageIgnoreHashCode() {
+        EvoSuite evosuite = new EvoSuite();
+
+        String targetClass = ClassWithHashCode.class.getCanonicalName();
+        Properties.TARGET_CLASS = targetClass;
+
+        String[] command = new String[]{"-generateSuite", "-class", targetClass};
+        Object result = evosuite.parseCommandLine(command);
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
+        int goals = 0;
+        for (TestFitnessFactory ff : TestGenerationStrategy.getFitnessFactories())
+            goals += ff.getCoverageGoals().size();
+        Assert.assertEquals("Unexpected number of goals", 2, goals);
+        Assert.assertEquals("Non-optimal fitness: ", 0.0, best.getFitness(), 0.001);
+        Assert.assertEquals("Non-optimal coverage: ", 1d, best.getCoverage(), 0.001);
+    }
 }

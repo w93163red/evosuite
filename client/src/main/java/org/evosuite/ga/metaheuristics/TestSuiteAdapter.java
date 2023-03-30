@@ -1,3 +1,22 @@
+/**
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
+ * contributors
+ * <p>
+ * This file is part of EvoSuite.
+ * <p>
+ * EvoSuite is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3.0 of the License, or
+ * (at your option) any later version.
+ * <p>
+ * EvoSuite is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.evosuite.ga.metaheuristics;
 
 import org.evosuite.ProgressMonitor;
@@ -16,7 +35,10 @@ import org.evosuite.ga.populationlimit.SizePopulationLimit;
 import org.evosuite.ga.stoppingconditions.*;
 import org.evosuite.statistics.StatisticsListener;
 import org.evosuite.testcase.TestChromosome;
-import org.evosuite.testsuite.*;
+import org.evosuite.testsuite.RelativeSuiteLengthBloatControl;
+import org.evosuite.testsuite.StatementsPopulationLimit;
+import org.evosuite.testsuite.TestSuiteChromosome;
+import org.evosuite.testsuite.TestSuiteFitnessFunction;
 import org.evosuite.utils.ResourceController;
 
 import java.util.*;
@@ -196,7 +218,7 @@ public abstract class TestSuiteAdapter<A extends GeneticAlgorithm<TestChromosome
     }
 
     @Override
-    public void addFitnessFunction(final FitnessFunction< TestSuiteChromosome> function){
+    public void addFitnessFunction(final FitnessFunction<TestSuiteChromosome> function) {
         algorithm.addFitnessFunction(mapFitnessFunctionToTestCaseLevel(function));
     }
 
@@ -227,11 +249,11 @@ public abstract class TestSuiteAdapter<A extends GeneticAlgorithm<TestChromosome
      * Converts a selection function from either TestSuite or Test case level to the other
      *
      * @param function The function to be converted
-     * @param <T> ToType of the conversion
-     * @param <X> FromType of the conversion
+     * @param <T>      ToType of the conversion
+     * @param <X>      FromType of the conversion
      * @return The converted selection function.
      */
-    private static<T extends Chromosome<T>, X extends Chromosome<X>> SelectionFunction<T> mapSelectionFunction(SelectionFunction<X> function){
+    private static <T extends Chromosome<T>, X extends Chromosome<X>> SelectionFunction<T> mapSelectionFunction(SelectionFunction<X> function) {
         if (function instanceof FitnessProportionateSelection) {
             return new FitnessProportionateSelection<>((FitnessProportionateSelection<?>) function);
         } else if (function instanceof TournamentSelection) {
@@ -264,7 +286,7 @@ public abstract class TestSuiteAdapter<A extends GeneticAlgorithm<TestChromosome
         algorithm.setRankingFunction(adapteeFunction);
     }
 
-    private static<T extends Chromosome<T>, X extends Chromosome<X>> RankingFunction<T> mapRankingFunction(RankingFunction<X> function){
+    private static <T extends Chromosome<T>, X extends Chromosome<X>> RankingFunction<T> mapRankingFunction(RankingFunction<X> function) {
         if (function instanceof FastNonDominatedSorting) {
             return new FastNonDominatedSorting<>();
         } else if (function instanceof RankBasedPreferenceSorting) {
@@ -307,7 +329,7 @@ public abstract class TestSuiteAdapter<A extends GeneticAlgorithm<TestChromosome
     }
 
     @Override
-    final protected void calculateFitness(){
+    final protected void calculateFitness() {
         algorithm.calculateFitness();
     }
 
@@ -318,7 +340,7 @@ public abstract class TestSuiteAdapter<A extends GeneticAlgorithm<TestChromosome
     }
 
     @Override
-    final protected void calculateFitnessAndSortPopulation(){
+    final protected void calculateFitnessAndSortPopulation() {
         algorithm.calculateFitnessAndSortPopulation();
     }
 
@@ -359,7 +381,7 @@ public abstract class TestSuiteAdapter<A extends GeneticAlgorithm<TestChromosome
             } else {
                 throw new IllegalArgumentException("factory not supported: " + factory);
             }
-        } else  {
+        } else {
             // When we hit this branch, this TestSuiteAdapter object is currently being
             // constructed, and this method was invoked by the constructor of the super class
             // (i.e., GeneticAlgorithm). We simply do nothing.
@@ -386,7 +408,7 @@ public abstract class TestSuiteAdapter<A extends GeneticAlgorithm<TestChromosome
             } else {
                 throw new IllegalArgumentException("cannot adapt crossover " + crossover);
             }
-        } else  {
+        } else {
             // When we hit this branch, this TestSuiteAdapter object is currently being
             // constructed, and this method was invoked by the constructor of the super class
             // (i.e., GeneticAlgorithm). We simply do nothing.
@@ -403,7 +425,7 @@ public abstract class TestSuiteAdapter<A extends GeneticAlgorithm<TestChromosome
             } else if (listener instanceof RelativeSuiteLengthBloatControl) {
                 super.addListener(listener);
             } else if (listener instanceof ResourceController) {
-                if(!searchListenerMapping.containsKey(listener)){
+                if (!searchListenerMapping.containsKey(listener)) {
                     ResourceController<TestChromosome> adapteeListener = new ResourceController<>();
                     searchListenerMapping.put(listener, adapteeListener);
                     algorithm.addListener(adapteeListener);
@@ -431,7 +453,7 @@ public abstract class TestSuiteAdapter<A extends GeneticAlgorithm<TestChromosome
             } else if (listener instanceof RelativeSuiteLengthBloatControl) {
                 super.removeListener(listener);
             } else if (listener instanceof ResourceController) {
-                if(searchListenerMapping.containsKey(listener))
+                if (searchListenerMapping.containsKey(listener))
                     algorithm.removeListener(searchListenerMapping.get(listener));
             } else if (listener instanceof ProgressMonitor) {
                 super.removeListener(listener);
@@ -497,7 +519,7 @@ public abstract class TestSuiteAdapter<A extends GeneticAlgorithm<TestChromosome
      * @param limit
      * @return
      */
-    private static<T extends Chromosome<T>> PopulationLimit<T> mapPopulationLimit(PopulationLimit<?> limit){
+    private static <T extends Chromosome<T>> PopulationLimit<T> mapPopulationLimit(PopulationLimit<?> limit) {
         if (limit instanceof IndividualPopulationLimit) {
             return new IndividualPopulationLimit<>((IndividualPopulationLimit<?>) limit);
         } else if (limit instanceof StatementsPopulationLimit) {
@@ -538,13 +560,15 @@ public abstract class TestSuiteAdapter<A extends GeneticAlgorithm<TestChromosome
      * Exchanges the generic parameters of a Stopping condition (if possible).
      *
      * @param stoppingCondition the stopping condition with "wrong" generic parameters.
-     * @param <T> the desired target chromosome type
+     * @param <T>               the desired target chromosome type
      * @return
      */
     private static <T extends Chromosome<T>> StoppingCondition<T>
-            mapStoppingCondition(StoppingCondition<?> stoppingCondition) {
+    mapStoppingCondition(StoppingCondition<?> stoppingCondition) {
         if (stoppingCondition instanceof MaxTimeStoppingCondition) {
             return new MaxTimeStoppingCondition<>((MaxTimeStoppingCondition<?>) stoppingCondition);
+        } else if (stoppingCondition instanceof TimeDeltaStoppingCondition) {
+            return new TimeDeltaStoppingCondition<>((TimeDeltaStoppingCondition<?>) stoppingCondition);
         } else if (stoppingCondition instanceof MaxGenerationStoppingCondition) {
             return new MaxGenerationStoppingCondition<>((MaxGenerationStoppingCondition<?>) stoppingCondition);
         } else if (stoppingCondition instanceof RMIStoppingCondition) {
@@ -606,7 +630,7 @@ public abstract class TestSuiteAdapter<A extends GeneticAlgorithm<TestChromosome
     }
 
     @Override
-    final protected double progress(){
+    final protected double progress() {
         return algorithm.progress();
     }
 

@@ -20,23 +20,11 @@
 
 package org.evosuite;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.evosuite.classpath.ClassPathHacker;
-import org.evosuite.executionmode.Continuous;
-import org.evosuite.executionmode.Help;
-import org.evosuite.executionmode.ListClasses;
-import org.evosuite.executionmode.ListParameters;
-import org.evosuite.executionmode.MeasureCoverage;
-import org.evosuite.executionmode.PrintStats;
-import org.evosuite.executionmode.Setup;
-import org.evosuite.executionmode.TestGeneration;
-import org.evosuite.executionmode.WriteDependencies;
+import org.evosuite.executionmode.*;
 import org.evosuite.junit.writer.TestSuiteWriterUtils;
 import org.evosuite.runtime.sandbox.MSecurityManager;
 import org.evosuite.runtime.util.JavaExecCmdUtil;
@@ -73,7 +61,7 @@ public class EvoSuite {
     public static String base_dir_path = System.getProperty("user.dir");
     private static final Logger logger = LoggerFactory.getLogger(EvoSuite.class);
 
-    private static String separator = System.getProperty("file.separator");
+    private static final String separator = System.getProperty("file.separator");
     //private static String javaHome = System.getProperty("java.home");
 
     static {
@@ -257,11 +245,7 @@ public class EvoSuite {
                 }
             }
 
-            if (Properties.STRATEGY == Properties.Strategy.DSE && javaVersion >= 9){
-                throw new IllegalStateException("DSE is not supported for java versions >9 by EvoSuite");
-            }
-
-            if (Properties.JEE == true){
+            if (Properties.JEE == true) {
                 throw new IllegalStateException("JEE is not supported due to the Java 9+ update of EvoSuite");
             }
 
@@ -309,6 +293,8 @@ public class EvoSuite {
                         Properties.SPAWN_PROCESS_MANAGER_PORT
                 );
             }
+
+            checkProperties();
 
             /*
              * Following "options" are the actual (mutually exclusive) execution modes of EvoSuite
@@ -358,6 +344,14 @@ public class EvoSuite {
         }
 
         return null;
+    }
+
+    private static void checkProperties() {
+        Logger evoLogger = LoggingUtils.getEvoLogger();
+        if (Properties.USE_SEPARATE_CLASSLOADER && Properties.TEST_FORMAT == Properties.OutputFormat.JUNIT5) {
+            evoLogger.warn("* WARNING - Generating JUnit 5 tests with the option to use a separate classloader will result in not " +
+                    "runnable tests. Set either -Dtest_format=JUNIT4 or -Duse_separate_classloader=false");
+        }
     }
 
 }

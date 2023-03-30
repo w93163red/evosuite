@@ -48,17 +48,17 @@ public class SourceExceptionsSystemTest extends SystemTestBase {
         String[] command = new String[]{"-generateSuite", "-class", targetClass};
         Object result = evosuite.parseCommandLine(command);
 
-        GeneticAlgorithm<?> ga = getGAFromResult(result);
-        TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
         Assert.assertNotNull(best);
-        TestCaseExecutor.getInstance().initExecutor();
-        for(TestChromosome test : best.getTestChromosomes()) {
-        	ExecutionResult executionResult = TestCaseExecutor.getInstance().runTest(test.getTestCase());
-        	test.setLastExecutionResult(executionResult);
+        TestCaseExecutor.initExecutor();
+        for (TestChromosome test : best.getTestChromosomes()) {
+            ExecutionResult executionResult = TestCaseExecutor.runTest(test.getTestCase());
+            test.setLastExecutionResult(executionResult);
         }
 
         String code = best.toString();
-        Assert.assertTrue("Code:\n"+code, code.contains("verifyException(\"com.examples.with.different.packagename.mock.java.lang.SourceExceptions\","));
-        Assert.assertTrue("Code:\n"+code, code.contains("verifyException(\"com.examples.with.different.packagename.mock.java.lang.SourceExceptions$Foo\","));
+        Assert.assertTrue("Code:\n" + code, code.contains("verifyException(\"com.examples.with.different.packagename.mock.java.lang.SourceExceptions\","));
+        Assert.assertTrue("Code:\n" + code, code.contains("verifyException(\"com.examples.with.different.packagename.mock.java.lang.SourceExceptions$Foo\","));
     }
 }

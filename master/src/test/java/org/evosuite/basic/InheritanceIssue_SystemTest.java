@@ -35,7 +35,7 @@ import org.junit.Test;
  */
 public class InheritanceIssue_SystemTest extends SystemTestBase {
 
-    private void doTest(Class<?> target){
+    private void doTest(Class<?> target) {
         EvoSuite evosuite = new EvoSuite();
 
         String targetClass = target.getCanonicalName();
@@ -43,33 +43,33 @@ public class InheritanceIssue_SystemTest extends SystemTestBase {
         Properties.TARGET_CLASS = targetClass;
         Properties.CRITERION = new Properties.Criterion[]{Properties.Criterion.LINE};
 
-        String[] command = new String[] { "-generateSuite", "-class", targetClass };
+        String[] command = new String[]{"-generateSuite", "-class", targetClass};
 
         Object result = evosuite.parseCommandLine(command);
-        GeneticAlgorithm<?> ga = getGAFromResult(result);
-        TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
         System.out.println("EvolvedTestSuite:\n" + best);
 
         Assert.assertEquals("Non-optimal coverage: ", 1d, best.getCoverage(), 0.001);
     }
 
     @Test
-    public void testSuper(){
+    public void testSuper() {
         doTest(TheSuperClass.class);
     }
 
     @Test
-    public void testA(){
+    public void testA() {
         doTest(A.class);
     }
 
     @Test
-    public void testB(){
+    public void testB() {
         doTest(B.class);
     }
 
     @Test
-    public void testCombination(){
+    public void testCombination() {
         doTest(A.class);
         super.resetStaticVariables();
         super.setDefaultPropertiesForTestCases();

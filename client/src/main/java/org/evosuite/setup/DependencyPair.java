@@ -20,24 +20,25 @@
 package org.evosuite.setup;
 
 import org.evosuite.utils.generic.GenericClass;
+import org.evosuite.utils.generic.GenericClassFactory;
 
 /**
  * Created by Andrea Arcuri on 06/12/15.
  */
 public class DependencyPair {
     private final int recursion;
-    private final GenericClass dependencyClass;
+    private final GenericClass<?> dependencyClass;
 
     public DependencyPair(int recursion, java.lang.reflect.Type dependencyClass) {
         this.recursion = recursion;
-        this.dependencyClass = new GenericClass(dependencyClass);
+        this.dependencyClass = GenericClassFactory.get(dependencyClass);
     }
 
     public int getRecursion() {
         return recursion;
     }
 
-    public GenericClass getDependencyClass() {
+    public GenericClass<?> getDependencyClass() {
         return dependencyClass;
     }
 
@@ -60,11 +61,8 @@ public class DependencyPair {
             return false;
         DependencyPair other = (DependencyPair) obj;
         if (dependencyClass == null) {
-            if (other.dependencyClass != null)
-                return false;
-        } else if (!dependencyClass.equals(other.dependencyClass))
-            return false;
-        return true;
+            return other.dependencyClass == null;
+        } else return dependencyClass.equals(other.dependencyClass);
     }
 
 }

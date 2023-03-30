@@ -69,21 +69,21 @@ public class PublicFieldSystemTest extends SystemTestBase {
 
         String targetClass = ClassWithPublicPrimitiveField.class.getCanonicalName();
         Properties.TARGET_CLASS = targetClass;
-        Properties.OUTPUT_VARIABLES=""+ RuntimeVariable.HadUnstableTests;
+        Properties.OUTPUT_VARIABLES = "" + RuntimeVariable.HadUnstableTests;
         Properties.MINIMIZE = false;
         Properties.ASSERTION_STRATEGY = Properties.AssertionStrategy.ALL;
-        String[] command = new String[] { "-generateSuite", "-class",
-                targetClass };
+        String[] command = new String[]{"-generateSuite", "-class",
+                targetClass};
 
         Object result = evosuite.parseCommandLine(command);
 
-        GeneticAlgorithm<?> ga = getGAFromResult(result);
-        TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
         System.out.println("EvolvedTestSuite:\n" + best);
 
         Map<String, OutputVariable<?>> map = DebugStatisticsBackend.getLatestWritten();
         Assert.assertNotNull(map);
-        OutputVariable unstable = map.get(RuntimeVariable.HadUnstableTests.toString());
+        OutputVariable<?> unstable = map.get(RuntimeVariable.HadUnstableTests.toString());
         Assert.assertNotNull(unstable);
         Assert.assertEquals(Boolean.FALSE, unstable.getValue());
 

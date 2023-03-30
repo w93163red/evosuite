@@ -38,24 +38,24 @@ import static org.junit.Assert.fail;
 /**
  * Created by Andrea Arcuri on 29/03/15.
  */
-public class InfiniteWhile_SystemTest  extends SystemTestBase {
+public class InfiniteWhile_SystemTest extends SystemTestBase {
 
     @Test(timeout = 5000)
-    public void testLoading() throws Exception{
+    public void testLoading() throws Exception {
         EvoClassLoader loader = new EvoClassLoader();
         Class<?> clazz = loader.loadClass(InfiniteWhile.class.getCanonicalName());
         Method m = clazz.getMethod("infiniteLoop");
         try {
             m.invoke(null);
             fail();
-        }catch(InvocationTargetException e){
+        } catch (InvocationTargetException e) {
             //expected
             Assert.assertTrue(e.getCause() instanceof TooManyResourcesException);
         }
     }
 
     @Test(timeout = 30_000)
-    public void systemTest(){
+    public void systemTest() {
 
         EvoSuite evosuite = new EvoSuite();
 
@@ -64,19 +64,19 @@ public class InfiniteWhile_SystemTest  extends SystemTestBase {
         Properties.SEARCH_BUDGET = 10;
         Properties.TIMEOUT = 5000;
         Properties.STOPPING_CONDITION = Properties.StoppingCondition.MAXTIME;
-        String[] command = new String[] { "-generateSuite", "-class", targetClass };
+        String[] command = new String[]{"-generateSuite", "-class", targetClass};
 
         Object result = evosuite.parseCommandLine(command);
 
-        GeneticAlgorithm<?> ga = getGAFromResult(result);
-        TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
 
         System.out.println("EvolvedTestSuite:\n" + best);
         Assert.assertEquals("Non-optimal coverage: ", 1d, best.getCoverage(), 0.001);
     }
-    
+
     @Test(timeout = 30_000)
-    public void systemTestJUnit(){
+    public void systemTestJUnit() {
 
         EvoSuite evosuite = new EvoSuite();
 
@@ -86,12 +86,12 @@ public class InfiniteWhile_SystemTest  extends SystemTestBase {
         Properties.TIMEOUT = 5000;
         Properties.STOPPING_CONDITION = Properties.StoppingCondition.MAXTIME;
         Properties.JUNIT_TESTS = true;
-        String[] command = new String[] { "-generateSuite", "-class", targetClass };
+        String[] command = new String[]{"-generateSuite", "-class", targetClass};
 
         Object result = evosuite.parseCommandLine(command);
 
-        GeneticAlgorithm<?> ga = getGAFromResult(result);
-        TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
 
         System.out.println("EvolvedTestSuite:\n" + best);
         Assert.assertEquals("Should contain two tests: ", 2, best.size());

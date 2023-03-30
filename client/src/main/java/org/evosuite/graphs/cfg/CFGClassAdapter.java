@@ -30,98 +30,119 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The CFGClassAdapter calls a CFG generator for relevant methods
- * 
+ *
  * @author Gordon Fraser
  */
 public class CFGClassAdapter extends ClassVisitor {
 
-	private static final Logger logger = LoggerFactory.getLogger(CFGClassAdapter.class);
+    private static final Logger logger = LoggerFactory.getLogger(CFGClassAdapter.class);
 
-	/** Current class */
-	private final String className;
+    public static final String LAMBDA_METHOD_NAME = "lambda$";
 
-	private final ClassLoader classLoader;
+    /**
+     * Current class
+     */
+    private final String className;
 
-	/** Skip methods on enums - at least some */
-	private boolean isEnum = false;
+    private final ClassLoader classLoader;
 
-	/**
-	 * Constructor
-	 * 
-	 * @param visitor
-	 *            a {@link org.objectweb.asm.ClassVisitor} object.
-	 * @param className
-	 *            a {@link java.lang.String} object.
-	 */
-	public CFGClassAdapter(ClassLoader classLoader, ClassVisitor visitor, String className) {
-		super(Opcodes.ASM9, visitor);
-		this.className = className;
-		this.classLoader = classLoader;
-	}
+    /**
+     * Skip methods on enums - at least some
+     */
+    private boolean isEnum = false;
 
-	/* (non-Javadoc)
-	 * @see org.objectweb.asm.ClassAdapter#visit(int, int, java.lang.String, java.lang.String, java.lang.String, java.lang.String[])
-	 */
-	/** {@inheritDoc} */
-	@Override
-	public void visit(int version, int access, String name, String signature,
-	        String superName, String[] interfaces) {
-		if((access & Opcodes.ACC_FINAL) == Opcodes.ACC_FINAL) {
-			RemoveFinalClassAdapter.finalClasses.add(name.replace('/', '.'));
-		}
+    /**
+     * Constructor
+     *
+     * @param visitor   a {@link org.objectweb.asm.ClassVisitor} object.
+     * @param className a {@link java.lang.String} object.
+     */
+    public CFGClassAdapter(ClassLoader classLoader, ClassVisitor visitor, String className) {
+        super(Opcodes.ASM9, visitor);
+        this.className = className;
+        this.classLoader = classLoader;
+    }
 
-		// We are removing final access to allow mocking
-		// TODO: Is this redundant wrt RemoveFinalClassAdapter?
-		super.visit(version, access & ~Opcodes.ACC_FINAL, name, signature, superName, interfaces);
-		if (superName.equals("java/lang/Enum"))
-			isEnum = true;
-	}
+    /* (non-Javadoc)
+     * @see org.objectweb.asm.ClassAdapter#visit(int, int, java.lang.String, java.lang.String, java.lang.String, java.lang.String[])
+     */
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.objectweb.asm.ClassAdapter#visitMethod(int, java.lang.String,
-	 * java.lang.String, java.lang.String, java.lang.String[])
-	 */
-	/** {@inheritDoc} */
-	@Override
-	public MethodVisitor visitMethod(int methodAccess, String name, String descriptor,
-	        String signature, String[] exceptions) {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visit(int version, int access, String name, String signature,
+                      String superName, String[] interfaces) {
+        if ((access & Opcodes.ACC_FINAL) == Opcodes.ACC_FINAL) {
+            RemoveFinalClassAdapter.finalClasses.add(name.replace('/', '.'));
+        }
 
-		MethodVisitor mv = super.visitMethod(methodAccess, name, descriptor, signature,
-		                                     exceptions);
-		mv = new JSRInlinerAdapter(mv, methodAccess, name, descriptor, signature, exceptions);
+        // We are removing final access to allow mocking
+        // TODO: Is this redundant wrt RemoveFinalClassAdapter?
+        super.visit(version, access & ~Opcodes.ACC_FINAL, name, signature, superName, interfaces);
+        if (superName.equals("java/lang/Enum"))
+            isEnum = true;
+    }
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.objectweb.asm.ClassAdapter#visitMethod(int, java.lang.String,
+     * java.lang.String, java.lang.String, java.lang.String[])
+     */
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public MethodVisitor visitMethod(int methodAccess, String name, String descriptor,
+                                     String signature, String[] exceptions) {
+
+        MethodVisitor mv = super.visitMethod(methodAccess, name, descriptor, signature,
+                exceptions);
+        mv = new JSRInlinerAdapter(mv, methodAccess, name, descriptor, signature, exceptions);
 
 
-		if ((methodAccess & Opcodes.ACC_SYNTHETIC) != 0
-		        || (methodAccess & Opcodes.ACC_BRIDGE) != 0) {
-			return mv;
-		}
+        if (((methodAccess & Opcodes.ACC_SYNTHETIC) != 0 && !isLambdaMethodName(name))
+                || (methodAccess & Opcodes.ACC_BRIDGE) != 0) {
+            return mv;
+        }
 
-		// We ignore deprecated only for dependencies, not for the SUT
+        // We ignore deprecated only for dependencies, not for the SUT
 //		if (!Properties.USE_DEPRECATED
 //		        && (methodAccess & Opcodes.ACC_DEPRECATED) == Opcodes.ACC_DEPRECATED) {
 //			logger.info("Skipping deprecated method " + name);
 //			return mv;
 //		}
 
-		if (isEnum) {
-			if(name.equals("valueOf") || name.equals("values")) {
-				logger.info("Skipping enum valueOf");
-				return mv;
-			}
-		    if (name.equals("<init>") && descriptor.equals("(Ljava/lang/String;I)V")) {
-				logger.info("Skipping enum default constructor");
-				return mv;
-			}
-		}
+        if (isEnum) {
+            if (name.equals("valueOf") || name.equals("values")) {
+                logger.info("Skipping enum valueOf");
+                return mv;
+            }
+            if (name.equals("<init>") && descriptor.equals("(Ljava/lang/String;I)V")) {
+                logger.info("Skipping enum default constructor");
+                return mv;
+            }
+        }
 
-		logger.info("Analyzing CFG of "+className);
+        logger.info("Analyzing CFG of " + className);
 
-		String classNameWithDots = ResourceList.getClassNameFromResourcePath(className);
+        String classNameWithDots = ResourceList.getClassNameFromResourcePath(className);
 
-		mv = new CFGMethodAdapter(classLoader, classNameWithDots, methodAccess, name,
-		        descriptor, signature, exceptions, mv);
-		return mv;
-	}
+        mv = new CFGMethodAdapter(classLoader, classNameWithDots, methodAccess, name,
+                descriptor, signature, exceptions, mv);
+        return mv;
+    }
+
+    /**
+     * Just checks wheter the name of the method is of a synthetic lambda.
+     * TODO: we do the same on the concolic engine VMs, eventually move this to a commons space.
+     *
+     * @param methodName
+     * @return
+     */
+    private static boolean isLambdaMethodName(String methodName) {
+        return methodName.startsWith(LAMBDA_METHOD_NAME);
+    }
 }

@@ -19,11 +19,6 @@
  */
 package org.evosuite.executionmode;
 
-import java.io.*;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -35,17 +30,22 @@ import org.evosuite.classpath.ClassPathHandler;
 import org.evosuite.utils.LoggingUtils;
 import org.evosuite.utils.SpawnProcessKeepAliveChecker;
 
+import java.io.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Scanner;
+
 public class Continuous {
 
-	public enum Command {EXECUTE, INFO, CLEAN};
+    public enum Command {EXECUTE, INFO, CLEAN}
 
-	public static final String NAME = "continuous";
+    public static final String NAME = "continuous";
 
-	public static Option getOption(){
-		String description = "Run Continuous Test Generation (CTG).";
-		description += " Valid values are: " + Arrays.toString(Command.values());
-		return new Option(NAME,true,description);
-	}
+    public static Option getOption() {
+        String description = "Run Continuous Test Generation (CTG).";
+        description += " Valid values are: " + Arrays.toString(Command.values());
+        return new Option(NAME, true, description);
+    }
 
 	public static Object execute(Options options, List<String> javaOpts, CommandLine line) {
 //
@@ -67,7 +67,7 @@ public class Continuous {
 //
 //		//we need to define 'target' only for execute mode
 //		if(line.hasOption("target") && command.equals(Command.EXECUTE)){
-//			target = line.getOptionValue("target");				
+//			target = line.getOptionValue("target");
 //		}
 //
 //
@@ -85,7 +85,7 @@ public class Continuous {
 //		String prefix = "";
 //		if (line.hasOption("prefix")) {
 //			prefix = line.getOptionValue("prefix");
-//		} 
+//		}
 //
 //		String[] cuts = null;
 //		if(Properties.CTG_SELECTED_CUTS != null && !Properties.CTG_SELECTED_CUTS.isEmpty()){
@@ -140,7 +140,7 @@ public class Continuous {
 //			LoggingUtils.getEvoLogger().info(info);
 //		}
 
-		return null;
-	}
+        return null;
+    }
 
 }

@@ -33,63 +33,66 @@ import org.evosuite.testcase.statements.MethodStatement;
 import org.evosuite.testcase.statements.Statement;
 import org.evosuite.testsuite.TestSuiteChromosome;
 
+import java.util.List;
+
 /**
  * Abstract base class for fitness functions for test case chromosomes
  *
  * @author Gordon Fraser
  */
-public abstract class TestFitnessFunction extends FitnessFunction<TestChromosome>
-		implements Comparable<TestFitnessFunction> {
+public abstract class TestFitnessFunction
+        extends FitnessFunction<TestChromosome>
+        implements Comparable<TestFitnessFunction> {
 
-	private static final long serialVersionUID = 5602125855207061901L;
+    private static final long serialVersionUID = 5602125855207061901L;
 
-	static boolean warnedAboutIsSimilarTo = false;
+    static boolean warnedAboutIsSimilarTo = false;
 
-	/**
-	 * <p>
-	 * getFitness
-	 * </p>
-	 *
-	 * @param individual
-	 *            a {@link org.evosuite.testcase.TestChromosome} object.
-	 * @param result
-	 *            a {@link org.evosuite.testcase.execution.ExecutionResult} object.
-	 * @return a double.
-	 */
-	public abstract double getFitness(TestChromosome individual, ExecutionResult result);
+    /**
+     * <p>
+     * getFitness
+     * </p>
+     *
+     * @param individual a {@link org.evosuite.testcase.TestChromosome} object.
+     * @param result     a {@link org.evosuite.testcase.execution.ExecutionResult} object.
+     * @return a double.
+     */
+    public abstract double getFitness(TestChromosome individual, ExecutionResult result);
 
-	/** {@inheritDoc} */
-	@Override
-	public double getFitness(TestChromosome individual) {
-		logger.trace("Executing test case on original");
-		ExecutionResult origResult = individual.getLastExecutionResult();
-		if (origResult == null || individual.isChanged()) {
-			origResult = runTest(individual.test);
-			individual.setLastExecutionResult(origResult);
-			individual.setChanged(false);
-		}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double getFitness(TestChromosome individual) {
+        logger.trace("Executing test case on original");
+        ExecutionResult origResult = individual.getLastExecutionResult();
+        if (origResult == null || individual.isChanged()) {
+            origResult = runTest(individual.test);
+            individual.setLastExecutionResult(origResult);
+            individual.setChanged(false);
+        }
 
-		double fitness = getFitness(individual, origResult);
-		updateIndividual(individual, fitness);
+        double fitness = getFitness(individual, origResult);
+        updateIndividual(individual, fitness);
 
-		return fitness;
-	}
+        return fitness;
+    }
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * Used to preorder goals by difficulty
-	 */
-	@Override
-	public abstract int compareTo(TestFitnessFunction other);
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Used to preorder goals by difficulty
+     */
+    @Override
+    public abstract int compareTo(TestFitnessFunction other);
 
-	protected final int compareClassName(TestFitnessFunction other) {
-		return this.getClass().getName().compareTo(other.getClass().getName());
-	}
+    protected final int compareClassName(TestFitnessFunction other) {
+        return this.getClass().getName().compareTo(other.getClass().getName());
+    }
 
 	/**
 	 * The vuln lib method should not be directly invoked in the test
-	 * 
+	 *
 	 * @param result
 	 * @return
 	 */
@@ -108,23 +111,23 @@ public abstract class TestFitnessFunction extends FitnessFunction<TestChromosome
 				String className = ps.getDeclaringClassName();
 				String methodDesc = ps.getDescriptor();
 				String methodName = ps.getMethodName() + methodDesc;
-				
+
 				String name = ReachabilityCoverageFactory.descriptorToActualName(methodName);
-				
+
 				if (ReachabilityCoverageFactory.targetCalleeMethod != null
 						&& ReachabilityCoverageFactory.targetCalleeClazzAsNormalName.equals(className)
-						&&  name.contains(ReachabilityCoverageFactory.targetCalleeMethod )) 
+						&&  name.contains(ReachabilityCoverageFactory.targetCalleeMethod ))
 				{ // same name
 					hasCalleeMethodStatement = true;
 					logger.warn("hasCalleeMethod: flouting stmt= " + ps);
 					break;
 				}
-				
+
 				if (ReachabilityCoverageFactory.forbiddenMethodCallsOnCallee != null && !ReachabilityCoverageFactory.forbiddenMethodCallsOnCallee.isEmpty()) {
 					AtMostOnceLogger.warn(logger, "hasCalleeMethodAsTestStatement: checking class " + className + " against " + ReachabilityCoverageFactory.targetCalleeClazzAsNormalName + "  with name=" + name + " against forbiddenMethodCallsOnCallee");
 					for (String oneForbiddenName : ReachabilityCoverageFactory.forbiddenMethodCallsOnCallee) {
-						
-						String targetPackage = ReachabilityCoverageFactory.targetCalleeClazzAsNormalName.substring(0, ReachabilityCoverageFactory.targetCalleeClazzAsNormalName.lastIndexOf(".")); 
+
+						String targetPackage = ReachabilityCoverageFactory.targetCalleeClazzAsNormalName.substring(0, ReachabilityCoverageFactory.targetCalleeClazzAsNormalName.lastIndexOf("."));
 						if (className.contains(targetPackage) && name.contains(oneForbiddenName)) {
 							logger.warn("hasCalleeMethod: flouted stmt= " + ps + " of class =" + className + " which calls " + oneForbiddenName);
 							hasCalleeMethodStatement = true;
@@ -142,10 +145,10 @@ public abstract class TestFitnessFunction extends FitnessFunction<TestChromosome
 		}
 		return hasCalleeMethodStatement;
 	}
-	
+
 	/**
 	 * The client project method should be directly invoked in the test
-	 * 
+	 *
 	 * @param test
 	 * @return
 	 */
@@ -157,13 +160,13 @@ public abstract class TestFitnessFunction extends FitnessFunction<TestChromosome
 				String className = ps.getDeclaringClassName();
 				String methodDesc = ps.getDescriptor();
 				String methodName = ps.getMethodName() + methodDesc;
-				
+
 				String name = ReachabilityCoverageFactory.descriptorToActualName(methodName);
-				
+
 //				logger.warn("comparing " + name + "  against " + ReachabilityCoverageFactory.targetCallerMethod);
 				if (ReachabilityCoverageFactory.targetCallerClazz != null
 						&& ReachabilityCoverageFactory.targetCallerClazz.equals(className)
-						&& name.contains(ReachabilityCoverageFactory.targetCallerMethod)) 
+						&& name.contains(ReachabilityCoverageFactory.targetCallerMethod))
 				{ // same name
 					hasCallerMethodStatement = true;
 //					logger.warn("hasCallerMethod: floating stmt= " + ps);
@@ -183,61 +186,60 @@ public abstract class TestFitnessFunction extends FitnessFunction<TestChromosome
 	@Override
 	public abstract int hashCode();
 
-	@Override
-	public abstract boolean equals(Object other);
+    @Override
+    public abstract boolean equals(Object other);
 
-	/** {@inheritDoc} */
-	public ExecutionResult runTest(TestCase test) {
-		return TestCaseExecutor.runTest(test);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public ExecutionResult runTest(TestCase test) {
+        return TestCaseExecutor.runTest(test);
+    }
 
-	/**
-	 * Determine if there is an existing test case covering this goal
-	 *
-	 * @param tests
-	 *            a {@link java.util.List} object.
-	 * @return a boolean.
-	 */
-	public boolean isCovered(List<TestCase> tests) {
-		return tests.stream().anyMatch(this::isCovered);
-	}
+    /**
+     * Determine if there is an existing test case covering this goal
+     *
+     * @param tests a {@link java.util.List} object.
+     * @return a boolean.
+     */
+    public boolean isCovered(List<TestCase> tests) {
+        return tests.stream().anyMatch(this::isCovered);
+    }
 
-	/**
-	 * Determine if there is an existing test case covering this goal
-	 *
-	 * @param tests
-	 *            a {@link java.util.List} object.
-	 * @return a boolean.
-	 */
-	public boolean isCoveredByResults(List<ExecutionResult> tests) {
-		return tests.stream().anyMatch(this::isCovered);
-	}
+    /**
+     * Determine if there is an existing test case covering this goal
+     *
+     * @param tests a {@link java.util.List} object.
+     * @return a boolean.
+     */
+    public boolean isCoveredByResults(List<ExecutionResult> tests) {
+        return tests.stream().anyMatch(this::isCovered);
+    }
 
-	public boolean isCoveredBy(TestSuiteChromosome testSuite) {
-		int num = 1;
-		for (TestChromosome test : testSuite.getTestChromosomes()) {
-			logger.debug("Checking goal against test "+num+"/"+testSuite.size());
-			num++;
-			if (isCovered(test))
-				return true;
-		}
-		return false;
-	}
+    public boolean isCoveredBy(TestSuiteChromosome testSuite) {
+        int num = 1;
+        for (TestChromosome test : testSuite.getTestChromosomes()) {
+            logger.debug("Checking goal against test " + num + "/" + testSuite.size());
+            num++;
+            if (isCovered(test))
+                return true;
+        }
+        return false;
+    }
 
-	/**
-	 * <p>
-	 * isCovered
-	 * </p>
-	 *
-	 * @param test
-	 *            a {@link org.evosuite.testcase.TestCase} object.
-	 * @return a boolean.
-	 */
-	public boolean isCovered(TestCase test) {
-		TestChromosome c = new TestChromosome();
-		c.test = test;
-		return isCovered(c);
-	}
+    /**
+     * <p>
+     * isCovered
+     * </p>
+     *
+     * @param test a {@link org.evosuite.testcase.TestCase} object.
+     * @return a boolean.
+     */
+    public boolean isCovered(TestCase test) {
+        TestChromosome c = new TestChromosome();
+        c.test = test;
+        return isCovered(c);
+    }
 
 	/**
 	 * <p>
@@ -256,59 +258,60 @@ public abstract class TestFitnessFunction extends FitnessFunction<TestChromosome
 			return true;
 		}
 
-		ExecutionResult result = tc.getLastExecutionResult();
-		if (result == null || tc.isChanged()) {
-			result = runTest(tc.test);
-			tc.setLastExecutionResult(result);
-			tc.setChanged(false);
-		}
+        ExecutionResult result = tc.getLastExecutionResult();
+        if (result == null || tc.isChanged()) {
+            result = runTest(tc.test);
+            tc.setLastExecutionResult(result);
+            tc.setChanged(false);
+        }
 
-		return isCovered(tc, result);
-	}
+        return isCovered(tc, result);
+    }
 
-	/**
-	 * <p>
-	 * isCovered
-	 * </p>
-	 *
-	 * @param individual
-	 *            a {@link org.evosuite.testcase.TestChromosome} object.
-	 * @param result
-	 *            a {@link org.evosuite.testcase.execution.ExecutionResult} object.
-	 * @return a boolean.
-	 */
-	public boolean isCovered(TestChromosome individual, ExecutionResult result) {
-		boolean covered = getFitness(individual, result) == 0.0;
-		if (covered) {
-			individual.test.addCoveredGoal(this);
-		}
-		return covered;
-	}
+    /**
+     * <p>
+     * isCovered
+     * </p>
+     *
+     * @param individual a {@link org.evosuite.testcase.TestChromosome} object.
+     * @param result     a {@link org.evosuite.testcase.execution.ExecutionResult} object.
+     * @return a boolean.
+     */
+    public boolean isCovered(TestChromosome individual, ExecutionResult result) {
+        boolean covered = getFitness(individual, result) == 0.0;
+        if (covered) {
+            individual.test.addCoveredGoal(this);
+        }
+        return covered;
+    }
 
-	/**
-	 * Helper function if this is used without a chromosome
-	 *
-	 * @param result
-	 * @return
-	 */
-	public boolean isCovered(ExecutionResult result) {
-		TestChromosome chromosome = new TestChromosome();
-		chromosome.setTestCase(result.test);
-		chromosome.setLastExecutionResult(result);
-		chromosome.setChanged(false);
-		return isCovered(chromosome, result);
-	}
+    /**
+     * Helper function if this is used without a chromosome
+     *
+     * @param result
+     * @return
+     */
+    public boolean isCovered(ExecutionResult result) {
+        TestChromosome chromosome = new TestChromosome();
+        chromosome.setTestCase(result.test);
+        chromosome.setLastExecutionResult(result);
+        chromosome.setChanged(false);
+        return isCovered(chromosome, result);
+    }
 
-	/* (non-Javadoc)
-	 * @see org.evosuite.ga.FitnessFunction#isMaximizationFunction()
-	 */
-	/** {@inheritDoc} */
-	@Override
-	public boolean isMaximizationFunction() {
-		return false;
-	}
+    /* (non-Javadoc)
+     * @see org.evosuite.ga.FitnessFunction#isMaximizationFunction()
+     */
 
-	public abstract String getTargetClass();
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isMaximizationFunction() {
+        return false;
+    }
 
-	public abstract String getTargetMethod();
+    public abstract String getTargetClass();
+
+    public abstract String getTargetMethod();
 }

@@ -35,7 +35,7 @@ import org.junit.Test;
 public class MockThreadSystemTest extends SystemTestBase {
 
     @Test
-    public void testCallingOfRun(){
+    public void testCallingOfRun() {
         String targetClass = ExtendingThread.class.getCanonicalName();
 
         Properties.TARGET_CLASS = targetClass;
@@ -43,29 +43,29 @@ public class MockThreadSystemTest extends SystemTestBase {
         Properties.CRITERION = new Properties.Criterion[]{Properties.Criterion.LINE};
 
         EvoSuite evosuite = new EvoSuite();
-        String[] command = new String[] { "-generateSuite", "-class", targetClass };
+        String[] command = new String[]{"-generateSuite", "-class", targetClass};
         Object result = evosuite.parseCommandLine(command);
 
-        GeneticAlgorithm<?> ga = getGAFromResult(result);
-        TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
         Assert.assertNotNull(best);
         Assert.assertEquals("Non-optimal coverage: ", 1d, best.getCoverage(), 0.001);
     }
 
 
     @Test
-    public void testLongSleep(){
+    public void testLongSleep() {
         String targetClass = LongSleep.class.getCanonicalName();
 
         Properties.TARGET_CLASS = targetClass;
         Properties.REPLACE_CALLS = true;
 
         EvoSuite evosuite = new EvoSuite();
-        String[] command = new String[] { "-generateSuite", "-class", targetClass };
+        String[] command = new String[]{"-generateSuite", "-class", targetClass};
         Object result = evosuite.parseCommandLine(command);
 
-        GeneticAlgorithm<?> ga = getGAFromResult(result);
-        TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
         Assert.assertNotNull(best);
         Assert.assertEquals("Non-optimal coverage: ", 1d, best.getCoverage(), 0.001);
     }

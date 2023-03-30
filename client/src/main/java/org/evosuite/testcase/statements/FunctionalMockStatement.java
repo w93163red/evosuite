@@ -30,18 +30,20 @@ import org.evosuite.runtime.instrumentation.InstrumentedClass;
 import org.evosuite.runtime.mock.EvoSuiteMock;
 import org.evosuite.runtime.mock.MockList;
 import org.evosuite.runtime.util.AtMostOnceLogger;
-import org.evosuite.testcase.fm.EvoInvocationListener;
-import org.evosuite.testcase.fm.MethodDescriptor;
 import org.evosuite.runtime.util.Inputs;
 import org.evosuite.testcase.TestCase;
 import org.evosuite.testcase.execution.CodeUnderTestException;
 import org.evosuite.testcase.execution.EvosuiteError;
 import org.evosuite.testcase.execution.Scope;
 import org.evosuite.testcase.execution.UncompilableCodeException;
+import org.evosuite.testcase.fm.EvoInvocationListener;
+import org.evosuite.testcase.fm.MethodDescriptor;
 import org.evosuite.testcase.variable.ConstantValue;
 import org.evosuite.testcase.variable.VariableReference;
 import org.evosuite.utils.generic.GenericAccessibleObject;
 import org.evosuite.utils.generic.GenericClass;
+import org.evosuite.utils.generic.GenericClassFactory;
+import org.evosuite.utils.generic.GenericClassUtils;
 import org.mockito.MockSettings;
 import org.mockito.Mockito;
 import org.mockito.exceptions.base.MockitoException;
@@ -114,14 +116,14 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
      */
     protected final Map<String, int[]> methodParameters;
 
-    protected GenericClass targetClass;
+    protected GenericClass<?> targetClass;
 
     protected transient volatile EvoInvocationListener listener;
 
     protected transient Method mockCreator;
 
 
-    public FunctionalMockStatement(TestCase tc, VariableReference retval, GenericClass targetClass) throws IllegalArgumentException {
+    public FunctionalMockStatement(TestCase tc, VariableReference retval, GenericClass<?> targetClass) throws IllegalArgumentException {
         super(tc, retval);
         Inputs.checkNull(targetClass);
         this.targetClass = targetClass;
@@ -133,11 +135,11 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
     }
 
 
-    public FunctionalMockStatement(TestCase tc, Type retvalType, GenericClass targetClass) throws IllegalArgumentException {
+    public FunctionalMockStatement(TestCase tc, Type retvalType, GenericClass<?> targetClass) throws IllegalArgumentException {
         super(tc, retvalType);
         Inputs.checkNull(targetClass);
 
-        Class<?> rawType = new GenericClass(retvalType).getRawClass();
+        Class<?> rawType = GenericClassFactory.get(retvalType).getRawClass();
         if (!targetClass.getRawClass().equals(rawType)) {
             throw new IllegalArgumentException("Mismatch between raw type " + rawType + " and target class " + targetClass);
         }
@@ -150,7 +152,7 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
         //setUpMockCreator();
     }
 
-    private void setUpMockCreator(){
+    private void setUpMockCreator() {
         ClassLoader loader = targetClass.getRawClass().getClassLoader();
         try {
             Class<?> mockito = loader.loadClass(Mockito.class.getName());
@@ -158,7 +160,7 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
                     loader.loadClass(Class.class.getName()), loader.loadClass(MockSettings.class.getName()));
 
         } catch (Exception e) {
-            logger.error("Failed to setup mock creator: "+e.getMessage());
+            logger.error("Failed to setup mock creator: " + e.getMessage());
         }
     }
 
@@ -166,26 +168,26 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
     public void changeClassLoader(ClassLoader loader) {
 
         targetClass.changeClassLoader(loader);
-        for(MethodDescriptor descriptor : mockedMethods){
-            if(descriptor != null){
+        for (MethodDescriptor descriptor : mockedMethods) {
+            if (descriptor != null) {
                 descriptor.changeClassLoader(loader);
             }
         }
-        if(listener != null){
+        if (listener != null) {
             listener.changeClassLoader(loader);
         }
         super.changeClassLoader(loader);
     }
 
     protected void checkTarget() {
-        if(! canBeFunctionalMocked(targetClass.getRawClass())){
-            throw new IllegalArgumentException("Cannot create a basic functional mock for class "+targetClass);
+        if (!canBeFunctionalMocked(targetClass.getRawClass())) {
+            throw new IllegalArgumentException("Cannot create a basic functional mock for class " + targetClass);
         }
     }
 
     public static boolean canBeFunctionalMockedIncludingSUT(Type type) {
 
-        Class<?> rawClass = new GenericClass(type).getRawClass();
+        Class<?> rawClass = GenericClassFactory.get(type).getRawClass();
 
         if (EvoSuiteMock.class.isAssignableFrom(rawClass) ||
                 MockList.isAMockClass(rawClass.getName()) ||
@@ -196,7 +198,7 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
                 !Modifier.isPublic(rawClass.getModifiers())) {
             return false;
         }
-        
+
         if (!InstrumentedClass.class.isAssignableFrom(rawClass) &&
                 Modifier.isFinal(rawClass.getModifiers())) {
             /*
@@ -207,7 +209,7 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
             return false;
         }
 
-        if(InetSocketAddress.class.equals(rawClass)) {
+        if (InetSocketAddress.class.equals(rawClass)) {
             /*
              InetSocketAddress declares hashCode as final and thus cannot be mocked:
              https://github.com/mockito/mockito/issues/310
@@ -218,21 +220,21 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
         try {
             // If dependencies are missing, this may throw a NoClassDefFoundException
             rawClass.getDeclaredMethods();
-        } catch(NoClassDefFoundError e) {
-            AtMostOnceLogger.warn(logger, "Problem with class "+rawClass.getName()+": " + e.toString());
+        } catch (NoClassDefFoundError e) {
+            AtMostOnceLogger.warn(logger, "Problem with class " + rawClass.getName() + ": " + e);
             return false;
         }
 
         //avoid cases of infinite recursions
         boolean onlySelfReturns = true;
         for (Method m : rawClass.getDeclaredMethods()) {
-            if(! rawClass.equals(m.getReturnType())){
+            if (!rawClass.equals(m.getReturnType())) {
                 onlySelfReturns = false;
                 break;
             }
         }
 
-        if(onlySelfReturns && rawClass.getDeclaredMethods().length > 0){
+        if (onlySelfReturns && rawClass.getDeclaredMethods().length > 0) {
             //avoid weird cases like java.lang.Appendable
             return false;
         }
@@ -242,21 +244,17 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
                 //add here if needed
         );
 
-        if(avoid.contains(rawClass)){
-            return false;
-        }
-
-        return true;
+        return !avoid.contains(rawClass);
     }
 
     public static boolean canBeFunctionalMocked(Type type) {
 
-        Class<?> rawClass = new GenericClass(type).getRawClass();
-		final Class<?> targetClass = Properties.getTargetClassAndDontInitialise();
+        Class<?> rawClass = GenericClassFactory.get(type).getRawClass();
+        final Class<?> targetClass = Properties.getTargetClassAndDontInitialise();
 
         if (Properties.hasTargetClassBeenLoaded()
-        		&& GenericClass.isAssignable(targetClass, rawClass)) {
-        	return false;
+                && GenericClassUtils.isAssignable(targetClass, rawClass)) {
+            return false;
         }
 
         return canBeFunctionalMockedIncludingSUT(type);
@@ -340,7 +338,7 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
             if (now.getCounter() != previous.getCounter() &&
                     (now.getCounter() < Properties.FUNCTIONAL_MOCKING_INPUT_LIMIT) ||
                     previous.getCounter() < Properties.FUNCTIONAL_MOCKING_INPUT_LIMIT
-                    ) {
+            ) {
                 return true;
             }
         }
@@ -355,7 +353,6 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
      * VariableReferences, if any, using addMissingInputs.
      *
      * @return a ordered, non-null list of types of missing new inputs that will need to be provided
-     *
      */
     public List<Type> updateMockedMethods() throws ConstructionFailedException {
 
@@ -389,7 +386,7 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
 
             int added = 0;
 
-            logger.debug("Method called on mock object: "+md.getMethod());
+            logger.debug("Method called on mock object: " + md.getMethod());
 
             //infer parameter mapping of current vars from previous execution, if any
             int[] minMax = methodParameters.get(md.getID());
@@ -426,10 +423,10 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
                 for (int i = existingParameters; i < md.getCounter() && i < Properties.FUNCTIONAL_MOCKING_INPUT_LIMIT; i++) {
                     // Create a copy as the typemap is stored in the class during generic instantiation
                     // but we might want to have a different type for each call of the same method invocation
-                    GenericClass calleeClass = new GenericClass(retval.getGenericClass());
+                    GenericClass<?> calleeClass = GenericClassFactory.get(retval.getGenericClass());
                     Type returnType = md.getGenericMethodFor(calleeClass).getGeneratedType();
                     assert !returnType.equals(Void.TYPE);
-                    logger.debug("Return type: "+returnType +" for retval "+retval.getGenericClass());
+                    logger.debug("Return type: " + returnType + " for retval " + retval.getGenericClass());
                     list.add(returnType);
 
                     super.parameters.add(null); //important place holder for following updates
@@ -478,7 +475,7 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
                         throw new IllegalArgumentException("Not enough parameter place holders");
                     }
                 }
-                logger.debug("Current input: "+ref+" for expected type "+getExpectedParameterType(index));
+                logger.debug("Current input: " + ref + " for expected type " + getExpectedParameterType(index));
 
                 assert ref.isAssignableTo(getExpectedParameterType(index));
 
@@ -500,25 +497,25 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
             if (ref == null) {
                 Class<?> expected = getExpectedParameterType(i);
                 Object value = null;
-                if(expected.isPrimitive()) {
+                if (expected.isPrimitive()) {
                     //can't fill a primitive with null
-                    if(expected.equals(Integer.TYPE)) {
+                    if (expected.equals(Integer.TYPE)) {
                         value = 0;
-                    } else if(expected.equals(Float.TYPE)) {
+                    } else if (expected.equals(Float.TYPE)) {
                         value = 0f;
-                    } else if(expected.equals(Double.TYPE)) {
+                    } else if (expected.equals(Double.TYPE)) {
                         value = 0d;
-                    } else if(expected.equals(Long.TYPE)) {
+                    } else if (expected.equals(Long.TYPE)) {
                         value = 0L;
-                    } else if(expected.equals(Boolean.TYPE)) {
+                    } else if (expected.equals(Boolean.TYPE)) {
                         value = false;
-                    } else if(expected.equals(Short.TYPE)) {
+                    } else if (expected.equals(Short.TYPE)) {
                         value = Short.valueOf("0");
-                    } else if(expected.equals(Character.TYPE)){
+                    } else if (expected.equals(Character.TYPE)) {
                         value = 'a';
                     }
                 }
-                parameters.set(i, new ConstantValue(tc, new GenericClass(expected), value));
+                parameters.set(i, new ConstantValue(tc, GenericClassFactory.get(expected), value));
             }
         }
     }
@@ -598,7 +595,7 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
                     //then create the mock
                     Object ret;
                     try {
-                        logger.debug("Mockito: create mock for {}",targetClass);
+                        logger.debug("Mockito: create mock for {}", targetClass);
 
                         ret = mock(targetClass.getRawClass(), createMockSettings());
                         //ret = mockCreator.invoke(null,targetClass,withSettings().invocationListeners(listener));
@@ -606,12 +603,12 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
                         //execute all "when" statements
                         int index = 0;
 
-                        logger.debug("Mockito: going to mock {} different methods",mockedMethods.size());
+                        logger.debug("Mockito: going to mock {} different methods", mockedMethods.size());
                         for (MethodDescriptor md : mockedMethods) {
 
                             if (!md.shouldBeMocked()) {
                                 //no need to mock a method that returns void
-                                logger.debug("Mockito: method {} cannot be mocked",md.getMethodName());
+                                logger.debug("Mockito: method {} cannot be mocked", md.getMethodName());
                                 continue;
                             }
 
@@ -624,18 +621,18 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
                             //target inputs
                             Object[] targetInputs = new Object[md.getNumberOfInputParameters()];
                             for (int i = 0; i < targetInputs.length; i++) {
-                                logger.debug("Mockito: executing matcher {}/{}",(1+i),targetInputs.length);
+                                logger.debug("Mockito: executing matcher {}/{}", (1 + i), targetInputs.length);
                                 targetInputs[i] = md.executeMatcher(i);
                             }
 
                             logger.debug("Mockito: going to invoke method {} with {} matchers",
                                     method.getName(), targetInputs.length);
 
-                            if(! method.getDeclaringClass().isAssignableFrom(ret.getClass())){
+                            if (!method.getDeclaringClass().isAssignableFrom(ret.getClass())) {
 
-                                String msg = "Mismatch between callee's class "+ret.getClass()+" and method's class "+
+                                String msg = "Mismatch between callee's class " + ret.getClass() + " and method's class " +
                                         method.getDeclaringClass();
-                                msg += "\nTarget class classloader "+targetClass.getRawClass().getClassLoader() +
+                                msg += "\nTarget class classloader " + targetClass.getRawClass().getClassLoader() +
                                         " vs method's classloader " + method.getDeclaringClass().getClassLoader();
                                 throw new EvosuiteError(msg);
                             }
@@ -649,14 +646,14 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
                                 } else {
                                     targetMethodResult = method.invoke(ret, targetInputs);
                                 }
-                            } catch (InvocationTargetException e){
+                            } catch (InvocationTargetException e) {
                                 logger.error("Invocation of mocked {}.{}() threw an exception. " +
-                                        "This means the method was not mocked",targetClass.getClassName(), method.getName());
+                                        "This means the method was not mocked", targetClass.getClassName(), method.getName());
                                 throw e;
-                            } catch (IllegalArgumentException | IllegalAccessError e){
+                            } catch (IllegalArgumentException | IllegalAccessError e) {
                                 // FIXME: Happens for reasons I don't understand. By throwing a CodeUnderTestException EvoSuite
                                 // will just ignore that mocking statement and continue, instead of crashing
-                                logger.error("IAE on <"+method+"> when called with "+Arrays.toString(targetInputs));
+                                logger.error("IAE on <" + method + "> when called with " + Arrays.toString(targetInputs));
                                 throw new CodeUnderTestException(e);
                             }
 
@@ -699,17 +696,17 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
 
                                     thenReturnInputs[i] = fixBoxing(thenReturnInputs[i], method.getReturnType());
                                 }
-                            } catch (Exception e){
+                            } catch (Exception e) {
                                 //be sure "then" is always called after a "when", otherwise Mockito might end up in
                                 //a inconsistent state
-                                retForThen.thenThrow(new RuntimeException("Failed to setup mock: "+e.getMessage()));
+                                retForThen.thenThrow(new RuntimeException("Failed to setup mock: " + e.getMessage()));
                                 throw e;
                             }
 
 
                             //final call when(...).thenReturn(...)
                             logger.debug("Mockito: executing 'thenReturn'");
-                            if(thenReturnInputs == null || thenReturnInputs.length == 0) {
+                            if (thenReturnInputs == null || thenReturnInputs.length == 0) {
                                 retForThen.thenThrow(new RuntimeException("No valid return value"));
                             } else if (thenReturnInputs.length == 1) {
                                 retForThen.thenReturn(thenReturnInputs[0]);
@@ -718,18 +715,18 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
                                 retForThen.thenReturn(thenReturnInputs[0], values);
                             }
 
-                            index += thenReturnInputs==null ? 0 : thenReturnInputs.length;
+                            index += thenReturnInputs == null ? 0 : thenReturnInputs.length;
                         }
 
-                    } catch (CodeUnderTestException e){
+                    } catch (CodeUnderTestException e) {
                         throw e;
-                    } catch(java.lang.NoClassDefFoundError e) {
-                        AtMostOnceLogger.error(logger, "Cannot use Mockito on "+targetClass+" due to failed class initialization: "+e.getMessage());
+                    } catch (java.lang.NoClassDefFoundError e) {
+                        AtMostOnceLogger.error(logger, "Cannot use Mockito on " + targetClass + " due to failed class initialization: " + e.getMessage());
                         return; //or should throw an exception?
-                    } catch(MockitoException | IllegalAccessException | IllegalAccessError | IllegalArgumentException e) {
+                    } catch (MockitoException | IllegalAccessException | IllegalAccessError | IllegalArgumentException e) {
                         // FIXME: Happens for reasons I don't understand. By throwing a CodeUnderTestException EvoSuite
                         // will just ignore that mocking statement and continue, instead of crashing
-                        AtMostOnceLogger.error(logger, "Cannot use Mockito on "+targetClass+" due to IAE: "+e.getMessage());
+                        AtMostOnceLogger.error(logger, "Cannot use Mockito on " + targetClass + " due to IAE: " + e.getMessage());
                         throw new CodeUnderTestException(e); //or should throw an exception?
                     } catch (Throwable t) {
                         AtMostOnceLogger.error(logger, "Failed to use Mockito on " + targetClass + ": " + t.getMessage());
@@ -759,90 +756,90 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
                  */
                 private Object fixBoxing(Object value, Class<?> expectedType) {
 
-                    if(!expectedType.isPrimitive()){
+                    if (!expectedType.isPrimitive()) {
                         return value;
                     }
 
                     Class<?> valuesClass = value.getClass();
-                    assert ! valuesClass.isPrimitive();
+                    assert !valuesClass.isPrimitive();
 
-                    if(expectedType.equals(Integer.TYPE)){
-                        if(valuesClass.equals(Character.class)){
+                    if (expectedType.equals(Integer.TYPE)) {
+                        if (valuesClass.equals(Character.class)) {
                             value = (int) (Character) value;
-                        } else if(valuesClass.equals(Byte.class)){
-                            value = ((Byte)value).intValue();
-                        } else if(valuesClass.equals(Short.class)){
-                            value = ((Short)value).intValue();
+                        } else if (valuesClass.equals(Byte.class)) {
+                            value = ((Byte) value).intValue();
+                        } else if (valuesClass.equals(Short.class)) {
+                            value = ((Short) value).intValue();
                         }
                     }
 
-                    if(expectedType.equals(Double.TYPE)) {
-                        if(valuesClass.equals(Integer.class)){
+                    if (expectedType.equals(Double.TYPE)) {
+                        if (valuesClass.equals(Integer.class)) {
                             value = (double) (Integer) value;
-                        } else if(valuesClass.equals(Byte.class)){
-                            value = (double) ((Byte)value).intValue();
-                        } else if(valuesClass.equals(Character.class)){
+                        } else if (valuesClass.equals(Byte.class)) {
+                            value = (double) ((Byte) value).intValue();
+                        } else if (valuesClass.equals(Character.class)) {
                             value = (double) (Character) value;
-                        } else if(valuesClass.equals(Short.class)){
-                            value = (double) ((Short)value).intValue();
-                        } else if(valuesClass.equals(Long.class)){
+                        } else if (valuesClass.equals(Short.class)) {
+                            value = (double) ((Short) value).intValue();
+                        } else if (valuesClass.equals(Long.class)) {
                             value = (double) (Long) value;
-                        } else if(valuesClass.equals(Float.class)){
+                        } else if (valuesClass.equals(Float.class)) {
                             value = (double) (Float) value;
                         }
                     }
 
-                    if(expectedType.equals(Float.TYPE)) {
-                        if(valuesClass.equals(Integer.class)){
+                    if (expectedType.equals(Float.TYPE)) {
+                        if (valuesClass.equals(Integer.class)) {
                             value = (float) (Integer) value;
-                        } else if(valuesClass.equals(Byte.class)){
-                            value = (float) ((Byte)value).intValue();
-                        } else if(valuesClass.equals(Character.class)){
+                        } else if (valuesClass.equals(Byte.class)) {
+                            value = (float) ((Byte) value).intValue();
+                        } else if (valuesClass.equals(Character.class)) {
                             value = (float) (Character) value;
-                        } else if(valuesClass.equals(Short.class)){
-                            value = (float) ((Short)value).intValue();
-                        } else if(valuesClass.equals(Long.class)){
+                        } else if (valuesClass.equals(Short.class)) {
+                            value = (float) ((Short) value).intValue();
+                        } else if (valuesClass.equals(Long.class)) {
                             value = (float) (Long) value;
                         }
                     }
 
-                    if(expectedType.equals(Long.TYPE)) {
-                        if(valuesClass.equals(Integer.class)){
+                    if (expectedType.equals(Long.TYPE)) {
+                        if (valuesClass.equals(Integer.class)) {
                             value = (long) (Integer) value;
-                        } else if(valuesClass.equals(Byte.class)){
-                            value = (long) ((Byte)value).intValue();
-                        } else if(valuesClass.equals(Character.class)){
+                        } else if (valuesClass.equals(Byte.class)) {
+                            value = (long) ((Byte) value).intValue();
+                        } else if (valuesClass.equals(Character.class)) {
                             value = (long) (Character) value;
-                        } else if(valuesClass.equals(Short.class)){
-                            value = (long) ((Short)value).intValue();
+                        } else if (valuesClass.equals(Short.class)) {
+                            value = (long) ((Short) value).intValue();
                         }
                     }
 
-                    if(expectedType.equals(Short.TYPE)) {
-                        if(valuesClass.equals(Integer.class)){
-                            value = (short) ((Integer)value).intValue();
-                        } else if(valuesClass.equals(Byte.class)){
-                            value = (short) ((Byte)value).intValue();
-                        } else if(valuesClass.equals(Short.class)){
-                            value = (short) ((Short)value).intValue();
-                        } else if(valuesClass.equals(Character.class)){
-                            value = (short) ((Character)value).charValue();
-                        } else if(valuesClass.equals(Long.class)){
-                            value = (short) ((Long)value).intValue();
+                    if (expectedType.equals(Short.TYPE)) {
+                        if (valuesClass.equals(Integer.class)) {
+                            value = (short) ((Integer) value).intValue();
+                        } else if (valuesClass.equals(Byte.class)) {
+                            value = (short) ((Byte) value).intValue();
+                        } else if (valuesClass.equals(Short.class)) {
+                            value = (short) ((Short) value).intValue();
+                        } else if (valuesClass.equals(Character.class)) {
+                            value = (short) ((Character) value).charValue();
+                        } else if (valuesClass.equals(Long.class)) {
+                            value = (short) ((Long) value).intValue();
                         }
                     }
 
-                    if(expectedType.equals(Byte.TYPE)) {
-                        if(valuesClass.equals(Integer.class)){
-                            value = (byte) ((Integer)value).intValue();
-                        } else if(valuesClass.equals(Short.class)){
-                            value = (byte) ((Short)value).intValue();
-                        } else if(valuesClass.equals(Byte.class)){
-                            value = (byte) ((Byte)value).intValue();
-                        } else if(valuesClass.equals(Character.class)){
-                            value = (byte) ((Character)value).charValue();
-                        } else if(valuesClass.equals(Long.class)){
-                            value = (byte) ((Long)value).intValue();
+                    if (expectedType.equals(Byte.TYPE)) {
+                        if (valuesClass.equals(Integer.class)) {
+                            value = (byte) ((Integer) value).intValue();
+                        } else if (valuesClass.equals(Short.class)) {
+                            value = (byte) ((Short) value).intValue();
+                        } else if (valuesClass.equals(Byte.class)) {
+                            value = (byte) ((Byte) value).intValue();
+                        } else if (valuesClass.equals(Character.class)) {
+                            value = (byte) ((Character) value).charValue();
+                        } else if (valuesClass.equals(Long.class)) {
+                            value = (byte) ((Long) value).intValue();
                         }
                     }
 
@@ -912,15 +909,15 @@ public class FunctionalMockStatement extends EntityWithParametersStatement {
 
         return true;
     }
-    
+
     @Override
     public String toString() {
-    	return "mock(" + retval.getType() +")";
+        return "mock(" + retval.getType() + ")";
     }
 
     @Override
     public String getDescriptor() {
-        return "()L"+ PackageInfo.getNameWithSlash(retval.getVariableClass()) + ";";
+        return "()L" + PackageInfo.getNameWithSlash(retval.getVariableClass()) + ";";
     }
 
     @Override

@@ -19,108 +19,124 @@
  */
 package org.evosuite.symbolic.vm;
 
-import java.lang.reflect.Member;
-
 import org.objectweb.asm.Type;
+
+import java.lang.reflect.Member;
 
 /**
  * Invocation frame.
- * 
+ *
  * @author csallner@uta.edu (Christoph Csallner)
  */
 public abstract class Frame {
 
-	/**
-	 * The last method we invoked is instrumented. This means we invoked some
-	 * code that is neither native nor defined by an uninstrumented JDK class.
-	 */
-	private boolean weInvokedInstrumentedCode = true;
+    /**
+     * The last method we invoked is instrumented. This means we invoked some
+     * code that is neither native nor defined by an uninstrumented JDK class.
+     */
+    private boolean weInvokedInstrumentedCode = true;
 
-	/**
-	 * @return the last method invoked is instrumented, because it is neither
-	 *         native nor defined by an uninstrumented JDK class, etc.
-	 */
-	boolean weInvokedInstrumentedCode() {
-		return weInvokedInstrumentedCode;
-	}
+    /**
+     * The last method we invoked was the code of a jvm-generated
+     * magic lambda class.
+     */
+    private boolean weInvokedSynteticLambdaCodeThatInvokesNonInstrCode = false;
 
-	/**
-	 * The next call is to an instrumented method. The called method is neither
-	 * native, nor defined by an uninstrumented JDK class, etc.
-	 * <p>
-	 * 
-	 * Usage: This method has to be called just before any
-	 * method/constructor/clinit call.
-	 */
-	public void invokeInstrumentedCode(boolean b) {
-		weInvokedInstrumentedCode = b;
-	}
+    /**
+     * @return the last method invoked is instrumented, because it is neither
+     * native nor defined by an uninstrumented JDK class, etc.
+     */
+    boolean weInvokedInstrumentedCode() {
+        return weInvokedInstrumentedCode;
+    }
 
-	/**
-	 * The last method invoked by this frame needs a "this" receiver reference,
-	 * i.e., is an instance method or constructor.
-	 */
-	boolean invokeNeedsThis;
+    /**
+     * The next call is to an instrumented method. The called method is neither
+     * native, nor defined by an uninstrumented JDK class, etc.
+     * <p>
+     * <p>
+     * Usage: This method has to be called just before any
+     * method/constructor/clinit call.
+     */
+    public void invokeInstrumentedCode(boolean b) {
+        weInvokedInstrumentedCode = b;
+    }
 
-	/**
-	 * Operand stack
-	 */
-	public final OperandStack operandStack = new OperandStack();
+    /**
+     * The next call is to a lambda's synthetic method which calls non-instrumented code.
+     */
+    boolean weInvokedSyntheticLambdaCodeThatInvokesNonInstrCode() {
+        return weInvokedSynteticLambdaCodeThatInvokesNonInstrCode;
+    }
 
-	/**
-	 * List of local variables
-	 */
-	final LocalsTable localsTable;
+    public void invokeLambdaSyntheticCodeThatInvokesNonInstrCode(boolean b) {
+        weInvokedSynteticLambdaCodeThatInvokesNonInstrCode = b;
+    }
 
-	/**
-	 * Constructor
-	 */
-	protected Frame(int maxLocals) {
-		localsTable = new LocalsTable(maxLocals);
-	}
+    /**
+     * The last method invoked by this frame needs a "this" receiver reference,
+     * i.e., is an instance method or constructor.
+     */
+    boolean invokeNeedsThis;
 
-	public abstract Member getMember();
+    /**
+     * Operand stack
+     */
+    public final OperandStack operandStack = new OperandStack();
 
-	/**
-	 * Without the "this" receiver instance parameter
-	 */
-	public abstract int getNrFormalParameters();
+    /**
+     * List of local variables
+     */
+    final LocalsTable localsTable;
 
-	public abstract int getNrFormalParametersTotal();
+    /**
+     * Constructor
+     */
+    protected Frame(int maxLocals) {
+        localsTable = new LocalsTable(maxLocals);
+    }
 
-	/**
-	 * Dispose operands we passed to called method.
-	 * 
-	 * //@param nrFormalParameters without "this" receiver instance parameter
-	 * 
-	 * @param nrFormalParameters
-	 *            with "this" receiver instance parameter
-	 */
-	private void disposeOperands(int nrFormalParameters) {
-		for (int i = 0; i < nrFormalParameters; i++)
-			operandStack.popOperand();
-	}
+    public abstract Member getMember();
 
-	/**
-	 * We invoked some other method or constructor. Now we want to discard the
-	 * parameters we used for this call from our operand stack.
-	 */
-	void disposeMethInvokeArgs(String methDesc) {
-		disposeOperands(Type.getArgumentTypes(methDesc).length);
-		if (invokeNeedsThis)
-			operandStack.popOperand();
-	}
+    /**
+     * Without the "this" receiver instance parameter
+     */
+    public abstract int getNrFormalParameters();
 
-	/**
-	 * Dispose the parameters we needed to invoke frame (of instrumented
-	 * method).
-	 */
-	void disposeMethInvokeArgs(Frame frame) {
-		disposeOperands(frame.getNrFormalParametersTotal());
-	}
+    public abstract int getNrFormalParametersTotal();
 
-	@Override
-	public String toString() {
-		return getMember().getName() + "--" + operandStack.toString(); //$NON-NLS-1$
-	}
+    /**
+     * Dispose operands we passed to called method.
+     * <p>
+     * //@param nrFormalParameters without "this" receiver instance parameter
+     *
+     * @param nrFormalParameters with "this" receiver instance parameter
+     */
+    private void disposeOperands(int nrFormalParameters) {
+        for (int i = 0; i < nrFormalParameters; i++)
+            operandStack.popOperand();
+    }
+
+    /**
+     * We invoked some other method or constructor. Now we want to discard the
+     * parameters we used for this call from our operand stack.
+     */
+    void disposeMethInvokeArgs(String methDesc) {
+        disposeOperands(Type.getArgumentTypes(methDesc).length);
+        if (invokeNeedsThis)
+            operandStack.popOperand();
+    }
+
+    /**
+     * Dispose the parameters we needed to invoke frame (of instrumented
+     * method).
+     */
+    void disposeMethInvokeArgs(Frame frame) {
+        disposeOperands(frame.getNrFormalParametersTotal());
+    }
+
+    @Override
+    public String toString() {
+        return getMember().getName() + "--" + operandStack; //$NON-NLS-1$
+    }
 }

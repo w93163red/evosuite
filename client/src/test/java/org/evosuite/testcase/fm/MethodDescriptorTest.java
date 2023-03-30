@@ -19,13 +19,14 @@
  */
 package org.evosuite.testcase.fm;
 
-import org.evosuite.utils.generic.GenericClass;
+import org.evosuite.utils.generic.GenericClassFactory;
 import org.junit.Test;
 
 import java.awt.*;
 import java.lang.reflect.Method;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by foo on 20/12/15.
@@ -33,12 +34,12 @@ import static org.junit.Assert.*;
 public class MethodDescriptorTest {
 
     @Test
-    public void testMatcher() throws Exception{
+    public void testMatcher() throws Exception {
 
         Class<?> klass = Graphics2D.class;
-        Method m = klass.getDeclaredMethod("getRenderingHint",RenderingHints.Key.class);
+        Method m = klass.getDeclaredMethod("getRenderingHint", RenderingHints.Key.class);
 
-        MethodDescriptor md = new MethodDescriptor(m, new GenericClass(m.getReturnType()));
+        MethodDescriptor md = new MethodDescriptor(m, GenericClassFactory.get(m.getReturnType()));
 
         String res = md.getInputParameterMatchers();
         assertTrue(res, res.contains("any("));

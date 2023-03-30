@@ -32,8 +32,8 @@ import java.util.List;
 /**
  * The Maven shade plugin replaces strings (https://issues.apache.org/jira/browse/MSHADE-156)
  * To avoid this problem, we have to store the strings in a file and read them here.
- *
- *
+ * <p>
+ * <p>
  * Created by gordon on 19/03/2016.
  */
 public class ExcludedClasses {
@@ -43,7 +43,7 @@ public class ExcludedClasses {
     public static List<String> excludedClasses = new ArrayList<>();
 
     private static void loadExcludedClassNames() {
-        if(classesLoaded)
+        if (classesLoaded)
             return;
 
         InputStream excludedClassesStream = ExcludedClasses.class.getClassLoader().getResourceAsStream("excluded.classes");
@@ -58,10 +58,11 @@ public class ExcludedClasses {
             }
 
             br.close();
-        } catch(IOException e) {
+        } catch (IOException e) {
 
         }
     }
+
     /**
      * <p>
      * getPackagesShouldNotBeInstrumented
@@ -126,10 +127,7 @@ public class ExcludedClasses {
 //                    "org.dom4j.",
                     "org.aopalliance.",
                     "javax.servlet.",//note, Servlet is special. see comments in pom file
-                    "org.mockito.",
-                    "org.apache",
-                    "org.hamcrest", "org.objenesis"
-                    }));
+                    "org.mockito.", "org.apache", "org.hamcrest", "org.objenesis"));
         }
 
         return list;

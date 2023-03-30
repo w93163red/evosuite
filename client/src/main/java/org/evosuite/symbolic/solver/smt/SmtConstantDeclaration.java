@@ -19,28 +19,29 @@
  */
 package org.evosuite.symbolic.solver.smt;
 
+import org.evosuite.symbolic.solver.SmtSort;
+
 public final class SmtConstantDeclaration {
 
-	private final String name;
-	private final String sort;
+    private final String name;
+    private final SmtSort[] sorts;
 
-	public SmtConstantDeclaration(String constantName, String constantSort) {
-		this.name = constantName;
-		this.sort = constantSort;
-	}
+    public SmtConstantDeclaration(String constantName, SmtSort... constantSorts) {
+        this.name = constantName;
+        this.sorts = constantSorts;
+    }
 
-	public String getConstantName() {
-		return name;
-	}
+    public String getConstantName() {
+        return name;
+    }
 
-	public String getConstantSort() {
-		return sort;
-	}
-	
-	public String toString() {
-		SmtQueryPrinter printer = new SmtQueryPrinter();
-		String str = printer.print(this);
-		return str;
-	}
+    public SmtSort[] getConstantSorts() {
+        return sorts;
+    }
 
+    public String toString() {
+        SmtQueryPrinter printer = new SmtQueryPrinter();
+        String str = printer.print(this);
+        return str;
+    }
 }

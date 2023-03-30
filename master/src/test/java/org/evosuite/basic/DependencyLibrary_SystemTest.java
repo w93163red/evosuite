@@ -37,7 +37,7 @@ import org.junit.Test;
 public class DependencyLibrary_SystemTest extends SystemTestBase {
 
     @After
-    public void reset(){
+    public void reset() {
         RuntimeInstrumentation.setAvoidInstrumentingShadedClasses(true);
     }
 
@@ -54,11 +54,11 @@ public class DependencyLibrary_SystemTest extends SystemTestBase {
         Properties.TARGET_CLASS = targetClass;
         Properties.CRITERION = new Properties.Criterion[]{Properties.Criterion.LINE};
 
-        String[] command = new String[] { "-generateSuite", "-class", targetClass };
+        String[] command = new String[]{"-generateSuite", "-class", targetClass};
 
         Object result = evosuite.parseCommandLine(command);
-        GeneticAlgorithm<?> ga = getGAFromResult(result);
-        TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
         System.out.println("EvolvedTestSuite:\n" + best);
 
         Assert.assertEquals("Non-optimal coverage: ", 1d, best.getCoverage(), 0.001);

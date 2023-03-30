@@ -35,14 +35,20 @@ import org.slf4j.LoggerFactory;
  * Historical concrete TestFitnessFactories only implement the getGoals() method
  * of TestFitnessFactory. Those old Factories can just extend these
  * AstractFitnessFactory to support the new method getFitness()
- * 
+ *
  * @author Sebastian Steenbuck
  */
 public abstract class AbstractFitnessFactory<T extends TestFitnessFunction> implements
         TestFitnessFactory<T> {
 
+    /**
+     * A concrete factory can store the time consumed to initially compute all
+     * coverage goals in this field in order to track this information in
+     * SearchStatistics.
+     */
+    public static long goalComputationTime = 0L;
 	private static final Logger logger = LoggerFactory.getLogger(AbstractFitnessFactory.class);
-	
+
 	/**
 	 * A concrete factory can store the time consumed to initially compute all
 	 * coverage goals in this field in order to track this information in
@@ -50,9 +56,8 @@ public abstract class AbstractFitnessFactory<T extends TestFitnessFunction> impl
 	 */
 	public static long goalComputationTime = 0L;
 
-	
-	protected boolean isCUT(String className) {
-		
+
+    protected boolean isCUT(String className) {
 		boolean result = Properties.TARGET_CLASS.equals("")
 				|| (className.equals(Properties.TARGET_CLASS)
 				|| className.startsWith(Properties.TARGET_CLASS + "$"))
@@ -63,26 +68,28 @@ public abstract class AbstractFitnessFactory<T extends TestFitnessFunction> impl
 				;
 //		AtMostOnceLogger.warn(logger, "checking isCUT: " + className + "\tresult = " + result);
 		return result;
-	}
-	
-	/** {@inheritDoc} */
-	@Override
-	public double getFitness(TestSuiteChromosome suite) {
+    }
 
-		ExecutionTracer.enableTraceCalls();
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double getFitness(TestSuiteChromosome suite) {
 
-		int coveredGoals = 0;
-		for (T goal : getCoverageGoals()) {
-			for (TestChromosome test : suite.getTestChromosomes()) {
-				if (goal.isCovered(test)) {
-					coveredGoals++;
-					break;
-				}
-			}
-		}
+        ExecutionTracer.enableTraceCalls();
 
-		ExecutionTracer.disableTraceCalls();
+        int coveredGoals = 0;
+        for (T goal : getCoverageGoals()) {
+            for (TestChromosome test : suite.getTestChromosomes()) {
+                if (goal.isCovered(test)) {
+                    coveredGoals++;
+                    break;
+                }
+            }
+        }
 
-		return getCoverageGoals().size() - coveredGoals;
-	}
+        ExecutionTracer.disableTraceCalls();
+
+        return getCoverageGoals().size() - coveredGoals;
+    }
 }

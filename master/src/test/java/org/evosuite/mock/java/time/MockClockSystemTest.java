@@ -35,21 +35,21 @@ import org.junit.Test;
 public class MockClockSystemTest extends SystemTestBase {
 
     @Test
-    public void testClock() throws Exception{
+    public void testClock() throws Exception {
         String targetClass = ClockExample.class.getCanonicalName();
 
         Properties.TARGET_CLASS = targetClass;
         Properties.JUNIT_TESTS = true;
         Properties.JUNIT_CHECK = Properties.JUnitCheckValues.TRUE;
         Properties.REPLACE_CALLS = true;
-        Properties.OUTPUT_VARIABLES=""+ RuntimeVariable.HadUnstableTests;
+        Properties.OUTPUT_VARIABLES = "" + RuntimeVariable.HadUnstableTests;
 
         EvoSuite evosuite = new EvoSuite();
-        String[] command = new String[] { "-generateSuite", "-class", targetClass };
+        String[] command = new String[]{"-generateSuite", "-class", targetClass};
         Object result = evosuite.parseCommandLine(command);
 
-        GeneticAlgorithm<?> ga = getGAFromResult(result);
-        TestSuiteChromosome best = (TestSuiteChromosome) ga.getBestIndividual();
+        GeneticAlgorithm<TestSuiteChromosome> ga = getGAFromResult(result);
+        TestSuiteChromosome best = ga.getBestIndividual();
 
         Assert.assertNotNull(best);
         Assert.assertEquals("Non-optimal coverage: ", 1d, best.getCoverage(), 0.001);
