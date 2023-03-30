@@ -127,7 +127,7 @@ public class ExcludedClasses {
 //                    "org.dom4j.",
                     "org.aopalliance.",
                     "javax.servlet.",//note, Servlet is special. see comments in pom file
-                    "org.mockito.", "org.apache", "org.hamcrest", "org.objenesis"));
+                    "org.mockito.", "org.apache", "org.hamcrest", "org.objenesis"}));
         }
 
         return list;
