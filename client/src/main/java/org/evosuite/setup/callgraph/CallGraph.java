@@ -341,6 +341,53 @@ public class CallGraph implements Iterable<CallGraphEntry> {
 		return true;
     }
 
+    private boolean computeInterestingClassesReverseFromTheVuln(Graph<CallGraphEntry> g) {
+        Set<CallGraphEntry> startingVertices = new HashSet<>();
+
+        for (CallGraphEntry e : graph.getVertexSet()) {
+            logger.warn("name of vertex", e.getClassName());
+            if (e.getClassName().equals(ReachabilityCoverageFactory.targetCalleeClazzAsNormalName)) {
+                if (ReachabilityCoverageFactory.functionsCovered.contains(e.getMethodName())) {
+                    startingVertices.add(e);
+                }
+            }
+        }
+        if (startingVertices.isEmpty()) {
+//			logger.warn("Graph:");
+//			for (CallGraphEntry e : graph.getVertexSet()) {
+//				logger.warn("class name = " + e.getClassName());
+//				logger.warn("expected class name = " + ReachabilityCoverageFactory.targetCalleeClazzAsNormalName);
+//				if (e.getClassName().equals(ReachabilityCoverageFactory.targetCalleeClazzAsNormalName)) {
+//					logger.warn("vertex of method: " + e.getMethodName());
+//				}
+//			}
+            throw new RuntimeException("cannot compute paths in call graph (in reverse), starting from the vuln lib. No starting vertex found. You may need to compute the call graph externally and pass it in");
+        }
+        Set<String> classes = new HashSet<>();
+        Set<String> methodclasses = new HashSet<>();
+        Set<String> methodPlusClasses = new HashSet<>();
+        for (CallGraphEntry startingVertex : startingVertices) {
+            PathFinderDFSIterator<CallGraphEntry> dfs = new PathFinderDFSIterator<>(
+                    g, startingVertex, false);
+            while (dfs.hasNext()) {
+                CallGraphEntry e = dfs.next();
+                classes.add(e.getClassName());
+                methodclasses.add(e.getClassName()+e.getMethodName());
+                methodPlusClasses.add(e.getClassName()+":"+e.getMethodName());
+
+            }
+        }
+
+        toTestMethods.retainAll(methodclasses);
+        toTestClasses.retainAll(classes);
+        toTestClassAndMethods.retainAll(methodPlusClasses);
+        AtMostOnceLogger.warn(logger, "along call graph = " + toTestClassAndMethods);
+//		logger.warn("along call graph = " + toTestMethods);
+
+
+        return true;
+    }
+
     private boolean checkClassInPaths(String targetClass, Graph<CallGraphEntry> g, CallGraphEntry startingVertex) {
         if (!g.containsVertex(startingVertex)) {
             return false;

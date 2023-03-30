@@ -44,6 +44,13 @@ public class CarvingManager {
 
     private static CarvingManager instance = null;
 
+
+    private boolean carvingDone = false;
+
+    public boolean isCarvingDone() {
+        return carvingDone;
+    }
+
     private CarvingManager() {
 
     }
@@ -56,8 +63,6 @@ public class CarvingManager {
     }
 
     private final Map<Class<?>, List<TestCase>> carvedTests = new LinkedHashMap<>();
-
-    private boolean carvingDone = false;
 
     private Collection<String> getListOfJUnitClassNames() throws IllegalStateException {
 
