@@ -324,7 +324,7 @@ public class TestCaseExecutor implements ThreadFactory {
 		Runtime.getInstance().resetRuntime();
 
 		long startTime = System.currentTimeMillis();
-		logger.error("test executor here");
+//		logger.error("test executor here");
 		TimeoutHandler<ExecutionResult> handler = new TimeoutHandler<>();
 
 		// #TODO steenbuck could be nicer (TestRunnable should be an interface
