@@ -155,6 +155,11 @@ public final class ArchiveUtils {
                         return true;
                     }
                     break;
+                case REACHABILITY:
+                    if (goal instanceof ReachabilityCoverageTestFitness) {
+                        return true;
+                    }
+                    break;
                 case ONLYLINE:
                     if (goal instanceof LineCoverageTestFitness) {
                         return true;

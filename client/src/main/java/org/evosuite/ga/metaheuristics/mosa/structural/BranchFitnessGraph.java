@@ -77,11 +77,22 @@ public class BranchFitnessGraph implements Serializable {
 
                 BranchCoverageGoal goal = new BranchCoverageGoal(newB, true, newB.getClassName(), newB.getMethodName());
                 BranchCoverageTestFitness newFitness = new BranchCoverageTestFitness(goal);
-                graph.addEdge(newFitness, fitness);
+                if (!graph.containsVertex(newFitness)) {
+//					graph.addVertex(newFitness);
+                } else {
+                    graph.addEdge(newFitness, fitness);
+                }
+//				graph.addEdge(newFitness, fitness);
 
                 BranchCoverageGoal goal2 = new BranchCoverageGoal(newB, false, newB.getClassName(), newB.getMethodName());
                 BranchCoverageTestFitness newfitness2 = new BranchCoverageTestFitness(goal2);
-                graph.addEdge(newfitness2, fitness);
+                if (!graph.containsVertex(newfitness2)) {
+//					graph.addVertex(newfitness2);
+
+                } else {
+                    graph.addEdge(newfitness2, fitness);
+                }
+//				graph.addEdge(newfitness2, fitness);
             }
         }
     }
