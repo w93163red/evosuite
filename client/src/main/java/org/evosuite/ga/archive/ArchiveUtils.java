@@ -55,7 +55,7 @@ public final class ArchiveUtils {
     /**
      * Checks whether a specific goal (i.e., a {@link org.evosuite.testcase.TestFitnessFunction}
      * object) is of an enabled criterion. A criterion is considered enabled if and only if defined in
-     * {@link org.evosuite.Properties.CRITERION}.
+     * {@link org.evosuite.Properties.Criterion}.
      *
      * @param goal a {@link org.evosuite.testcase.TestFitnessFunction} object
      * @return true if criterion of goal is enabled, false otherwise
