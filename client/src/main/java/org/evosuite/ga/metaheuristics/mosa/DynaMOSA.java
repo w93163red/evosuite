@@ -130,12 +130,12 @@ public class DynaMOSA extends AbstractMOSA {
 		this.currentIteration++;
 		//logger.debug("N. fronts = {}", ranking.getNumberOfSubfronts());
 		//logger.debug("1* front size = {}", ranking.getSubfront(0).size());
-		logger.debug("Covered goals = {}", goalsManager.getCoveredGoals().size());
-		logger.debug("Current goals = {}", goalsManager.getCurrentGoals().size());
-		logger.debug("Uncovered goals = {}", goalsManager.getUncoveredGoals().size());
+		logger.info("Covered goals = {}", goalsManager.getCoveredGoals().size());
+		logger.info("Current goals = {}", goalsManager.getCurrentGoals().size());
+		logger.info("Uncovered goals = {}", goalsManager.getUncoveredGoals().size());
 		
-		logger.warn("DynaMOSA evolve one generation. currentIteration=" + currentIteration);
-		logger.warn("DynaMOSA goals = " + goalsManager.getCoveredGoals().size() + "," + goalsManager.getUncoveredGoals().size());
+		logger.info("DynaMOSA evolve one generation. currentIteration=" + currentIteration);
+		logger.info("DynaMOSA goals = " + goalsManager.getCoveredGoals().size() + "," + goalsManager.getUncoveredGoals().size());
 		
 		if (currentIteration == 1 || currentIteration % 5 ==0) {
 			ReachabilitySpecUnderInferenceUtils.performResetByCopyingFile();
@@ -155,7 +155,7 @@ public class DynaMOSA extends AbstractMOSA {
 			// stuck for ten gens already
 			ReachabilitySpecUnderInferenceUtils.progressHalted = 0;
 			
-			 logger.warn("reseting population due to lack of changes (?)");
+			 logger.debug("reseting population due to lack of changes (?)");
              this.clearPopulation();
 //           this.initializePopulation();
              this.generateInitialPopulation(Properties.POPULATION);

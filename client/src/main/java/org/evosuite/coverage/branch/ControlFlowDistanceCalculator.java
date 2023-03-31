@@ -99,7 +99,7 @@ public class ControlFlowDistanceCalculator {
 	 */
 	public static ControlFlowDistance getDistance(ExecutionResult result, Branch branch,
 	        boolean value, String className, String methodName) {
-		AtMostOnceLogger.warn(logger, "execution result: " + ((ExecutionTraceProxy)result.getTrace()).getTrace().toString());
+//		AtMostOnceLogger.warn(logger, "execution result: " + ((ExecutionTraceProxy)result.getTrace()).getTrace().toString());
 		if (result == null || className == null || methodName == null)
 			throw new IllegalArgumentException("null given");
 		if (branch == null && !value)

@@ -345,7 +345,7 @@ public class CallGraph implements Iterable<CallGraphEntry> {
 		Set<CallGraphEntry> startingVertices = new HashSet<>();
 		
 		for (CallGraphEntry e : graph.getVertexSet()) {
-			logger.warn("name of vertex", e.getClassName());
+			logger.debug("name of vertex", e.getClassName());
 			if (e.getClassName().equals(ReachabilityCoverageFactory.targetCalleeClazzAsNormalName)) {
 				if (ReachabilityCoverageFactory.functionsCovered.contains(e.getMethodName())) {
 					startingVertices.add(e);

@@ -140,7 +140,7 @@ public class ReachabilityCoverageTestFitness extends TestFitnessFunction {
 				// compare outputs
 				if (!ReachabilityCoverageFactory.matchedOutput) {
 					fitness += ReachabilityCoverageFactory.outputWeight; 
-					logger.warn("penalize fitness because output did not match. final fitness=" + fitness);
+//					logger.warn("penalize fitness because output did not match. final fitness=" + fitness);
 				}
 			}
 			
@@ -153,7 +153,7 @@ public class ReachabilityCoverageTestFitness extends TestFitnessFunction {
 
 		updateIndividual(individual, fitness);
 
-		logger.warn("completed fitness evaluation.");
+		logger.debug("completed fitness evaluation.");
 		if (fitness == 0.0 && !ReachabilityCoverageFactory.isRecording && ReachabilityCoverageFactory.matchedOutput) {
 			logger.warn("adding covered reachability goal : ");
 			individual.getTestCase().addCoveredGoal(this);

@@ -139,7 +139,7 @@ public class TestCaseExecutor implements ThreadFactory {
 //			logger.warn("Executing test=" + test);
 			result = executor.execute(test);
 			try {
-				logger.warn("\toutcome is (executed #stmt=" + result.getExecutedStatements() 
+				logger.debug("\toutcome is (executed #stmt=" + result.getExecutedStatements()
 				+ ", #exceptions=" + result.getNumberOfThrownExceptions()
 				+ ",  first exceptions=" + result.getFirstPositionOfThrownException()
 				+ ", exceptions are " + result.explicitExceptions

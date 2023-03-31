@@ -180,7 +180,7 @@ public class StaticConstantPool implements ConstantPool {
 			if (string.length() > 65535)
 				return;
 			stringPool.add(string);
-			
+			logger.info("string: " + string + " added to pool");
 			if (string.contains("quine")) {
 				logger.warn("adding string containing `quine` to constant pool");
 			}

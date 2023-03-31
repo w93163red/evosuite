@@ -78,14 +78,14 @@ public class CarvingRunListener extends RunListener {
 			if (ReachabilityCoverageFactory.targetCalledClazzTestMethodNames.contains(description.getMethodName())) {
 				
 				LoggingUtils.getEvoLogger().info(" - Carving test {}.{}", description.getClassName(), description.getMethodName());
-				logger.warn("process log");
+				logger.debug("process log");
 				this.processLog(description, log);
-				logger.warn("processed log");
+				logger.debug("processed log");
 			}
 		}
-		logger.warn("clearing capturer");
+		logger.debug("clearing capturer");
 		Capturer.clear();
-		logger.warn("cleared capturer");
+		logger.debug("cleared capturer");
 	}
 
 	private List<Class<?>> getObservedClasses(final CaptureLog log) {
