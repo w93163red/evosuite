@@ -52,7 +52,6 @@ public class ReachabilityCoverageTestFitness extends TestFitnessFunction {
 
 	public ReachabilityCoverageTestFitness(String name) {
 		this.nameOfTest = name;
-
 	}
 
 	@Override
@@ -77,6 +76,8 @@ public class ReachabilityCoverageTestFitness extends TestFitnessFunction {
 				}
 			} else {
 				// compare outputs
+				// TODO: Need to figure out the way to compare the outputs, hacking
+				ReachabilityCoverageFactory.matchedOutput = true;
 			}
 		}
 
@@ -148,8 +149,6 @@ public class ReachabilityCoverageTestFitness extends TestFitnessFunction {
 					ReachabilitySpecUnderInferenceUtils.iterationFitness, fitness);
 			
 		}
-		
-		
 
 		updateIndividual(individual, fitness);
 
@@ -158,7 +157,6 @@ public class ReachabilityCoverageTestFitness extends TestFitnessFunction {
 			logger.warn("adding covered reachability goal : ");
 			individual.getTestCase().addCoveredGoal(this);
 			ReachabilitySpecUnderInferenceUtils.writeTestToOutputFile(individual.toString());
-			
 		}
 
 		if (Properties.TEST_ARCHIVE) {

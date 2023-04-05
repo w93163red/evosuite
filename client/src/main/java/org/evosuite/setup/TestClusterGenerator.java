@@ -141,14 +141,14 @@ public class TestClusterGenerator {
 			}
 			if (new File("functions_covered.log").exists() && !new File("call_graph_methods.log").exists()) {
 				logger.warn("write to call_graph_methods");
-				try(BufferedWriter writer = new BufferedWriter(new FileWriter(new File("call_graph_methods.log")))) {
-					for (String methodclass : callGraph.getToTestClassAndMethods()) {
-						writer.write(methodclass + "\n");
-					}
-				} catch (IOException e1) {
-					throw new RuntimeException(e1);
-				}
-				throw new RuntimeException("wrote to call_graph_methods.log");
+//				try(BufferedWriter writer = new BufferedWriter(new FileWriter(new File("call_graph_methods.log")))) {
+//					for (String methodclass : callGraph.getToTestClassAndMethods()) {
+//						writer.write(methodclass + "\n");
+//					}
+//				} catch (IOException e1) {
+//					throw new RuntimeException(e1);
+//				}
+//				throw new RuntimeException("wrote to call_graph_methods.log");
 			}
 			
 		}

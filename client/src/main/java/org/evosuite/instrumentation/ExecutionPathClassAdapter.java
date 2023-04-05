@@ -29,8 +29,15 @@ import org.evosuite.utils.ArrayUtil;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.util.Printer;
+import org.objectweb.asm.util.Textifier;
+import org.objectweb.asm.util.TraceMethodVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 /**
  * Take care of all instrumentation that is necessary to trace executions

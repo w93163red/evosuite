@@ -827,7 +827,7 @@ public class ExecutionTraceImpl implements ExecutionTrace, Cloneable {
 	 */
 	@Override
 	public synchronized void exitMethod(String classname, String methodname) {
-		
+		logger.warn("exitMethod: " + "classname: " + classname + " methodname: " + methodname);
 		compareAgainstSpecIfCheckingAtEnd(classname, methodname);
 		if (!classname.isEmpty() && !methodname.isEmpty()) {
 			// if(traceCalls) {
@@ -852,8 +852,7 @@ public class ExecutionTraceImpl implements ExecutionTrace, Cloneable {
 
 	@Override
 	public void compareAgainstSpecIfCheckingAtEnd(String classname, String methodname) {
-
-		if (classname.equals(ReachabilityCoverageFactory.targetCalleeClazzAsNormalName) 
+		if (classname.equals(ReachabilityCoverageFactory.targetCalleeClazzAsNormalName)
 				&& ReachabilityCoverageFactory.targetCalleeMethod.contains(ReachabilityCoverageFactory.descriptorToActualName(methodname))) {
 			
 			if (!ReachabilityCoverageFactory.checkAtStart) {

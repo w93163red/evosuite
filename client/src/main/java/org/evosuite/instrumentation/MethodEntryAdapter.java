@@ -19,6 +19,7 @@
  */
 package org.evosuite.instrumentation;
 
+import java.io.PrintWriter;
 import java.lang.reflect.Method;
 
 import org.evosuite.PackageInfo;
@@ -31,6 +32,8 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.LocalVariablesSorter;
+import org.objectweb.asm.util.Printer;
+import org.objectweb.asm.util.Textifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +82,7 @@ public class MethodEntryAdapter extends AdviceAdapter {
 	/** {@inheritDoc} */
 	@Override
 	public void onMethodEnter() {
-
+//		logger.warn("onMethodEnter: methodName: " + fullMethodName + " className: " + className);
 		if (methodName.equals("<clinit>"))
 			return; // FIXXME: Should we call super.onMethodEnter() here?
 
@@ -96,6 +99,7 @@ public class MethodEntryAdapter extends AdviceAdapter {
 				|| !ReachabilityCoverageFactory.targetCalleeMethod.contains(ReachabilityCoverageFactory.descriptorToActualName(fullMethodName))
 						|| !ReachabilityCoverageFactory.targetCalleeClazzAsNormalName.equals(className) 
 				) {
+//			logger.warn("\t onMethodEnter: methodName: " + fullMethodName + " className: " + className + " true");
 			mv.visitLdcInsn(className);
 			mv.visitLdcInsn(fullMethodName);
 			if ((access & Opcodes.ACC_STATIC) > 0) {
@@ -109,7 +113,7 @@ public class MethodEntryAdapter extends AdviceAdapter {
 
 		}
 		else {
-			
+//			logger.warn("\t onMethodEnter: methodName: " + fullMethodName + " className: " + className + " false");
 			mv.visitLdcInsn(className);
 			mv.visitLdcInsn(fullMethodName);
 			if ((access & Opcodes.ACC_STATIC) > 0) {

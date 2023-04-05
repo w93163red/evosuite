@@ -195,7 +195,7 @@ public class ReachabilitySpecUnderInferenceUtils {
 
 	public static double compareObjects(ReachingSpec specUnderAnalysis, List<Object> realArgs) {
 		double total = 0; // the higher, the more similar
-		
+		logger.debug("comparing objects: " + specUnderAnalysis.toString());
 		// split 1.0 into `number of args` partitions.
 		//  in each partition, split again by the number of inspectors
 		// for each inspector, edit distance/1 or 0 if boolean 

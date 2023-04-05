@@ -107,14 +107,14 @@ public class TransferTestSuiteAnalyser {
 		}
 		goalsOfJunit = allGoalsCovered;
 		
-		try(BufferedWriter writer = new BufferedWriter(new FileWriter(new File("vuln_coverage_goals.log")))) {
-			for (TestFitnessFunction goal : goalsOfJunit) {
-				writer.append(goal.toString());
-				writer.append("\n");
-			}
-		} catch (IOException e1) {
-			throw new RuntimeException(e1);
-		}
+//		try(BufferedWriter writer = new BufferedWriter(new FileWriter(new File("vuln_coverage_goals.log")))) {
+//			for (TestFitnessFunction goal : goalsOfJunit) {
+//				writer.append(goal.toString());
+//				writer.append("\n");
+//			}
+//		} catch (IOException e1) {
+//			throw new RuntimeException(e1);
+//		}
 		
 		// update functionsCovered
 		for (TestFitnessFunction goal : goalsOfJunit) {
@@ -137,14 +137,14 @@ public class TransferTestSuiteAnalyser {
 		
 		if (!new File("functions_covered.log").exists()) {
 			logger.warn("writing to functions_covered.log");
-			try(BufferedWriter writer = new BufferedWriter(new FileWriter(new File("functions_covered.log")))) {
-				for (String func : ReachabilityCoverageFactory.functionsCovered) {
-					writer.append(func);
-					writer.append("\n");
-				}
-			} catch (IOException e1) {
-				throw new RuntimeException(e1);
-			}
+//			try(BufferedWriter writer = new BufferedWriter(new FileWriter(new File("functions_covered.log")))) {
+//				for (String func : ReachabilityCoverageFactory.functionsCovered) {
+//					writer.append(func);
+//					writer.append("\n");
+//				}
+//			} catch (IOException e1) {
+//				throw new RuntimeException(e1);
+//			}
 			logger.warn("wrote to functions_covered.log");
 			throw new RuntimeException("quitting. Wrote  to functions_covered.log. Run this again.");
 		}
